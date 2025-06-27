@@ -4,334 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FundMatch - Startup Investor Platform</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --primary-blue: #4A69BD;
-            --light-blue: #E8F0FE;
-            --dark-blue: #2E4CB8;
-            --success-green: #27AE60;
-            --text-dark: #2C3E50;
-            --text-light: #7F8C8D;
-            --border-light: #E0E6ED;
-            --white: #FFFFFF;
-            --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: #F8FAFC;
-            color: var(--text-dark);
-            line-height: 1.6;
-        }
-
-        .container {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            width: 250px;
-            background: var(--white);
-            border-right: 1px solid var(--border-light);
-            padding: 2rem 0;
-            box-shadow: var(--shadow);
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            padding: 0 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .logo-icon {
-            width: 40px;
-            height: 40px;
-            background: var(--primary-blue);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            margin-right: 0.75rem;
-        }
-
-        .nav-menu {
-            list-style: none;
-        }
-
-        .nav-item {
-            margin-bottom: 0.5rem;
-        }
-
-        .nav-link {
-            display: flex;
-            align-items: center;
-            padding: 0.75rem 1.5rem;
-            color: var(--text-light);
-            text-decoration: none;
-            transition: all 0.3s ease;
-        }
-
-        .nav-link:hover, .nav-link.active {
-            background: var(--light-blue);
-            color: var(--primary-blue);
-            border-right: 3px solid var(--primary-blue);
-        }
-
-        .nav-icon {
-            margin-right: 0.75rem;
-            font-size: 1.1rem;
-        }
-
-        /* Main Content */
-        .main-content {
-            flex: 1;
-            padding: 2rem;
-        }
-
-        .header {
-            display: flex;
-            justify-content: between;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
-
-        .user-profile {
-            background: var(--white);
-            padding: 0.75rem 1rem;
-            border-radius: 8px;
-            border: 1px solid var(--border-light);
-            margin-left: auto;
-        }
-
-        /* Steps Container */
-        .steps-container {
-            max-width: 1200px;
-        }
-
-        .step-card {
-            background: var(--white);
-            border-radius: 12px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border-light);
-        }
-
-        .step-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 1.5rem;
-        }
-
-        .step-icon {
-            width: 60px;
-            height: 60px;
-            background: var(--primary-blue);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 1.5rem;
-        }
-
-        .step-info h2 {
-            color: var(--text-dark);
-            font-size: 1.5rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .step-info p {
-            color: var(--text-light);
-            font-size: 1rem;
-        }
-
-        .step-description {
-            color: var(--text-light);
-            margin-bottom: 1.5rem;
-        }
-
-        /* Form Styles */
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: var(--text-dark);
-            font-weight: 500;
-        }
-
-        .form-input, .form-select {
-            width: 100%;
-            padding: 0.75rem;
-            border: 2px solid var(--border-light);
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.3s ease;
-        }
-
-        .form-input:focus, .form-select:focus {
-            outline: none;
-            border-color: var(--primary-blue);
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-        }
-
-        /* Button Styles */
-        .btn {
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
-        }
-
-        .btn-primary {
-            background: var(--primary-blue);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: var(--dark-blue);
-            transform: translateY(-2px);
-        }
-
-        .btn-secondary {
-            background: var(--border-light);
-            color: var(--text-dark);
-        }
-
-        .btn-secondary:hover {
-            background: #D0D7DE;
-        }
-
-        /* Results Section */
-        .results-section {
-            display: none;
-        }
-
-        .match-card {
-            background: var(--white);
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            box-shadow: var(--shadow);
-            border-left: 4px solid var(--success-green);
-        }
-
-        .match-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-
-        .investor-name {
-            font-size: 1.25rem;
-            font-weight: bold;
-            color: var(--text-dark);
-        }
-
-        .match-score {
-            background: var(--success-green);
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-weight: bold;
-        }
-
-        .match-details {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-        }
-
-        .detail-item {
-            display: flex;
-            align-items: center;
-        }
-
-        .detail-icon {
-            width: 8px;
-            height: 8px;
-            background: var(--success-green);
-            border-radius: 50%;
-            margin-right: 0.5rem;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 2rem;
-        }
-
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid var(--border-light);
-            border-top: 4px solid var(--primary-blue);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 1rem;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .container {
-                flex-direction: column;
-            }
-
-            .sidebar {
-                width: 100%;
-                padding: 1rem 0;
-            }
-
-            .nav-menu {
-                display: flex;
-                overflow-x: auto;
-            }
-
-            .nav-item {
-                margin-right: 1rem;
-                margin-bottom: 0;
-            }
-
-            .main-content {
-                padding: 1rem;
-            }
-
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-
-            .match-details {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
@@ -344,13 +17,13 @@
             <nav>
                 <ul class="nav-menu">
                     <li class="nav-item">
-                        <a href="#" class="nav-link active">
+                        <a href="#" class="nav-link active" id="nav-dashboard">
                             <span class="nav-icon">📊</span>
                             Dashboard
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="#" class="nav-link">
+                        <a href="#" class="nav-link" id="nav-profile">
                             <span class="nav-icon">👤</span>
                             Your Profile
                         </a>
@@ -397,9 +70,58 @@
                 </div>
             </header>
 
+            <!-- Dashboard Section -->
+            <div class="content-section" id="dashboard-section">
+                <div class="step-card fade-in">
+                    <div class="step-header">
+                        <div class="step-icon" style="background: var(--success-green);">
+                            <span style="color: white; font-size: 1.5rem;">✨</span>
+                        </div>
+                        <div class="step-info">
+                            <h2 id="dashboard-welcome-title">Welcome to Your Dashboard!</h2>
+                            <p id="dashboard-welcome-subtitle">Get a quick overview of your FundMatch activity.</p>
+                        </div>
+                    </div>
+                    <div class="step-description">
+                        Here you can see your key metrics, recent investor matches, and quick actions.
+                    </div>
+
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card">
+                            <h3>Total Matches Found</h3>
+                            <p class="metric-value" id="total-matches">0</p>
+                            <p class="metric-description">Investors aligned with your profile</p>
+                        </div>
+                        <div class="dashboard-card">
+                            <h3>Applications Sent</h3>
+                            <p class="metric-value" id="applications-sent">0</p>
+                            <p class="metric-description">Outreach initiated with investors</p>
+                        </div>
+                        <div class="dashboard-card">
+                            <h3>Upcoming Meetings</h3>
+                            <p class="metric-value" id="upcoming-meetings">0</p>
+                            <p class="metric-description">Scheduled calls with potential investors</p>
+                        </div>
+                    </div>
+
+                    <h3 style="margin-top: 2rem; margin-bottom: 1rem;">Recent Activity</h3>
+                    <div class="activity-list" id="activity-list">
+                        <!-- Activities will be populated here -->
+                        <div class="activity-item placeholder">Loading recent activities...</div>
+                    </div>
+
+                    <h3 style="margin-top: 2rem; margin-bottom: 1rem;">Quick Actions</h3>
+                    <div class="quick-actions">
+                        <button class="btn btn-primary animate-pop" id="start-new-match">Find New Matches</button>
+                        <button class="btn btn-secondary animate-pop">View All Matches</button>
+                        <button class="btn btn-secondary animate-pop">Edit Your Profile</button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Profile Step -->
-            <div class="steps-container">
-                <div class="step-card" id="profile-step">
+            <div class="content-section" id="profile-step" style="display: none;">
+                <div class="step-card fade-in">
                     <div class="step-header">
                         <div class="step-icon">
                             <span style="color: white; font-size: 1.5rem;">👤</span>
@@ -456,213 +178,52 @@
                             <div class="form-group">
                                 <label class="form-label">Investment Amount Needed (USD)</label>
                                 <input type="number" class="form-input" id="investment-amount" 
-                                       placeholder="e.g., 500000" required min="10000" max="100000000">
+                                        placeholder="e.g., 500000" required min="10000" max="100000000">
                             </div>
 
                             <div class="form-group">
                                 <label class="form-label">Company Name</label>
                                 <input type="text" class="form-input" id="company-name" 
-                                       placeholder="Your startup name" required>
+                                        placeholder="Your startup name" required>
                             </div>
                         </div>
 
-                        <button type="submit" class="btn btn-primary">Find My Matches</button>
+                        <button type="submit" class="btn btn-primary animate-pop">Find My Matches</button>
                     </form>
                 </div>
+            </div>
 
-                <!-- Loading State -->
-                <div class="loading" id="loading-state" style="display: none;">
+            <!-- Loading State -->
+            <div class="content-section" id="loading-state" style="display: none;">
+                <div class="loading fade-in">
                     <div class="spinner"></div>
-                    <p>Finding your perfect investor matches...</p>
+                    <p id="loading-text">Finding your perfect investor matches...</p>
                 </div>
+            </div>
 
-                <!-- Results Section -->
-                <div class="results-section" id="results-section">
-                    <div class="step-card">
-                        <div class="step-header">
-                            <div class="step-icon">
-                                <span style="color: white; font-size: 1.5rem;">🎯</span>
-                            </div>
-                            <div class="step-info">
-                                <h2>Your Top Investor Matches</h2>
-                                <p>Here are the investors most aligned with your startup</p>
-                            </div>
+            <!-- Results Section -->
+            <div class="content-section" id="results-section" style="display: none;">
+                <div class="step-card fade-in">
+                    <div class="step-header">
+                        <div class="step-icon">
+                            <span style="color: white; font-size: 1.5rem;">🎯</span>
                         </div>
-                        
-                        <div id="matches-container">
-                            <!-- Matches will be populated here -->
+                        <div class="step-info">
+                            <h2>Your Top Investor Matches</h2>
+                            <p>Here are the investors most aligned with your startup</p>
                         </div>
-
-                        <button class="btn btn-secondary" onclick="resetForm()">Start New Search</button>
                     </div>
+                    
+                    <div id="matches-container">
+                        <!-- Matches will be populated here -->
+                    </div>
+
+                    <button class="btn btn-secondary animate-pop" onclick="resetForm()">Start New Search</button>
                 </div>
             </div>
         </main>
     </div>
 
-    <script>
-        // Configuration
-        const API_BASE_URL = 'http://localhost:5000/api';
-
-        // API helper functions
-        async function apiCall(endpoint, options = {}) {
-            try {
-                const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        ...options.headers
-                    },
-                    ...options
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                return await response.json();
-            } catch (error) {
-                console.error('API call failed:', error);
-                throw error;
-            }
-        }
-
-        async function findMatches(founderProfile) {
-            return await apiCall('/match', {
-                method: 'POST',
-                body: JSON.stringify({
-                    industry: founderProfile.industry,
-                    funding_stage: founderProfile.fundingStage,
-                    risk_tolerance: founderProfile.riskTolerance,
-                    investment_amount: parseInt(founderProfile.investmentAmount),
-                    company_name: founderProfile.companyName
-                })
-            });
-        }
-
-        // Form submission handler
-        document.getElementById('profile-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            // Show loading state
-            document.getElementById('profile-step').style.display = 'none';
-            document.getElementById('loading-state').style.display = 'block';
-
-            // Collect form data
-            const founderProfile = {
-                industry: document.getElementById('industry').value,
-                fundingStage: document.getElementById('funding-stage').value,
-                riskTolerance: document.getElementById('risk-tolerance').value,
-                investmentAmount: document.getElementById('investment-amount').value,
-                companyName: document.getElementById('company-name').value
-            };
-
-            try {
-                // Call the backend API
-                const response = await findMatches(founderProfile);
-                
-                if (response.success) {
-                    // Display results
-                    displayMatches(response.matches, founderProfile);
-                } else {
-                    // Handle API error
-                    displayError(response.error || 'Failed to find matches');
-                }
-                
-            } catch (error) {
-                console.error('Error finding matches:', error);
-                displayError('Unable to connect to the matching service. Please try again later.');
-            }
-            
-            // Hide loading, show results
-            document.getElementById('loading-state').style.display = 'none';
-            document.getElementById('results-section').style.display = 'block';
-        });
-
-        function displayMatches(matches, founderProfile) {
-            const container = document.getElementById('matches-container');
-            
-            if (!matches || matches.length === 0) {
-                container.innerHTML = `
-                    <div class="match-card">
-                        <h3>No matches found</h3>
-                        <p>We couldn't find any investors that match your criteria. Try adjusting your requirements or check back later as we add more investors to our platform.</p>
-                    </div>
-                `;
-                return;
-            }
-
-            container.innerHTML = matches.map((match, index) => `
-                <div class="match-card">
-                    <div class="match-header">
-                        <div class="investor-name">${match.investor.name}</div>
-                        <div class="match-score">${match.score}/7 Match</div>
-                    </div>
-                    
-                    <p style="color: var(--text-light); margin-bottom: 1rem;">
-                        ${match.investor.description}
-                    </p>
-                    
-                    <div class="match-details">
-                        ${match.match_reasons.map(reason => `
-                            <div class="detail-item">
-                                <div class="detail-icon"></div>
-                                <span>${reason}</span>
-                            </div>
-                        `).join('')}
-                    </div>
-                    
-                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-light);">
-                        <small style="color: var(--text-light);">
-                            Investment Range: ${match.investor.investment_range[0].toLocaleString()} - ${match.investor.investment_range[1].toLocaleString()}
-                            | Risk Tolerance: ${match.investor.risk_tolerance.charAt(0).toUpperCase() + match.investor.risk_tolerance.slice(1)}
-                            ${match.investor.location ? ` | ${match.investor.location}` : ''}
-                        </small>
-                    </div>
-                    
-                    ${match.investor.contact ? `
-                        <div style="margin-top: 0.5rem;">
-                            <small style="color: var(--primary-blue);">
-                                📧 ${match.investor.contact}
-                            </small>
-                        </div>
-                    ` : ''}
-                </div>
-            `).join('');
-        }
-
-        function displayError(errorMessage) {
-            const container = document.getElementById('matches-container');
-            container.innerHTML = `
-                <div class="match-card" style="border-left-color: #E74C3C;">
-                    <h3 style="color: #E74C3C;">Error</h3>
-                    <p>${errorMessage}</p>
-                    <button class="btn btn-primary" onclick="resetForm()" style="margin-top: 1rem;">
-                        Try Again
-                    </button>
-                </div>
-            `;
-        }
-
-        function resetForm() {
-            document.getElementById('profile-form').reset();
-            document.getElementById('results-section').style.display = 'none';
-            document.getElementById('profile-step').style.display = 'block';
-        }
-
-        // Add form validation feedback
-        document.querySelectorAll('.form-input, .form-select').forEach(element => {
-            element.addEventListener('invalid', function() {
-                this.style.borderColor = '#E74C3C';
-            });
-            
-            element.addEventListener('input', function() {
-                if (this.checkValidity()) {
-                    this.style.borderColor = '#27AE60';
-                } else {
-                    this.style.borderColor = 'var(--border-light)';
-                }
-            });
-        });
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
