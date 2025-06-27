@@ -177,7 +177,7 @@ def find_matches():
             "founder_profile": founder_profile,
             "matches": top_matches,
             "total_matches": len(matches),
-            "timestamp": "2025-06-27T10:00:00Z"
+            
         }
         
         return jsonify(response_data)

@@ -1,5 +1,5 @@
 // Configuration
-const API_BASE_URL = 'http://localhost:5000/api'; // This is a placeholder for your actual backend API
+const API_BASE_URL= 'http://localhost:5000'; // This is a placeholder for your actual backend API
 
 // DOM Elements
 const dashboardSection = document.getElementById('dashboard-section');
@@ -99,134 +99,35 @@ function typeText(element, text, delay = 50) {
 // --- API Helper Functions ---
 async function apiCall(endpoint, options = {}) {
     try {
-        // Simulate API call delay for better UX
+        // Simulate API call delay for better UX (optional, can be removed for production)
         await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 500)); // 0.8 to 1.3 seconds delay
 
-        // This is where you would typically make a real fetch call
-        // const response = await fetch(`${API_BASE_URL}${endpoint}`, { ...options });
-        // if (!response.ok) { throw new Error(`HTTP error! status: ${response.status}`); }
-        // return await response.json();
+        // Construct the full API URL. Assuming the Flask backend is on the same host.
+         // If your Flask backend is on a different origin, specify it here, e.g., 'http://localhost:5000'
+        const url = `${API_BASE_URL}${endpoint}`;
 
-        // --- Mock Data for Demonstration ---
-        if (endpoint === '/match' && options.method === 'POST') {
-            const founderProfile = JSON.parse(options.body);
-            const mockInvestors = [
-                {
-                    name: "Tech Growth Ventures",
-                    description: "Specializes in early-stage SaaS and AI startups, focusing on disruptive technologies and scalable solutions.",
-                    investment_range: [500000, 5000000],
-                    risk_tolerance: "high",
-                    location: "Silicon Valley",
-                    contact: "contact@techgrowth.com"
-                },
-                {
-                    name: "Health Innovation Fund",
-                    description: "Invests in innovative HealthTech solutions, digital health platforms, and biotech advancements.",
-                    investment_range: [200000, 3000000],
-                    risk_tolerance: "medium",
-                    location: "Boston",
-                    contact: "info@healthinnov.com"
-                },
-                {
-                    name: "EduFuture Capital",
-                    description: "Dedicated to transforming education through EdTech startups with scalable models and impactful learning tools.",
-                    investment_range: [100000, 2000000],
-                    risk_tolerance: "medium",
-                    location: "New York",
-                    contact: "partners@edufuture.com"
-                },
-                {
-                    name: "Global Fintech Partners",
-                    description: "A leading fund for FinTech startups, from payment solutions and blockchain to regulatory tech.",
-                    investment_range: [1000000, 10000000],
-                    risk_tolerance: "high",
-                    location: "London",
-                    contact: "invest@globalfintech.com"
-                },
-                {
-                    name: "E-commerce Accelerators",
-                    description: "Focuses on direct-to-consumer (D2C) brands, e-commerce innovations, and logistics technology.",
-                    investment_range: [50000, 1000000],
-                    risk_tolerance: "low",
-                    location: "Los Angeles",
-                    contact: "accelerate@ecommerce.com"
-                },
-                 {
-                    name: "AI Frontier Fund",
-                    description: "Exclusively invests in cutting-edge AI and Machine Learning applications across various sectors.",
-                    investment_range: [750000, 7000000],
-                    risk_tolerance: "high",
-                    location: "Seattle",
-                    contact: "ai@frontier.com"
-                },
-                {
-                    name: "Blockchain Innovators",
-                    description: "Supports decentralized applications, crypto infrastructure, and blockchain-native businesses.",
-                    investment_range: [300000, 4000000],
-                    risk_tolerance: "high",
-                    location: "Zug, Switzerland",
-                    contact: "contact@blockchaininnov.com"
-                }
-            ];
+        // Make the real fetch call
+        const response = await fetch(url, {
+            method: options.method || 'GET', // Default to GET if not specified
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers // Allow overriding or adding more headers
+            },
+            body: options.body // The body should already be a JSON string from the caller
+        });
 
-            const matches = mockInvestors.map(investor => {
-                let score = 0;
-                const reasons = [];
-
-                // Industry match
-                if (investor.description.toLowerCase().includes(founderProfile.industry.toLowerCase()) || 
-                    investor.name.toLowerCase().includes(founderProfile.industry.toLowerCase())) {
-                    score += 2;
-                    reasons.push(`Invests in your industry: **${founderProfile.industry.charAt(0).toUpperCase() + founderProfile.industry.slice(1)}**`);
-                }
-
-                // Funding stage match (simplified)
-                const investmentAmount = parseInt(founderProfile.investmentAmount);
-                if (investor.investment_range[0] <= investmentAmount && investor.investment_range[1] >= investmentAmount) {
-                    score += 2;
-                    reasons.push(`Investment range aligns: $${investor.investment_range[0].toLocaleString()} - $${investor.investment_range[1].toLocaleString()}`);
-                } else if (investor.investment_range[0] < investmentAmount * 1.5 && investor.investment_range[1] > investmentAmount * 0.5) {
-                    score += 1; // Partial match
-                    reasons.push(`Investment range is a close fit`);
-                }
-
-                // Risk tolerance match
-                if (investor.risk_tolerance === founderProfile.riskTolerance) {
-                    score += 1;
-                    reasons.push(`Matches your risk tolerance: **${founderProfile.riskTolerance.charAt(0).toUpperCase() + founderProfile.riskTolerance.slice(1)}**`);
-                }
-
-                // Company name keyword match (example - very basic)
-                if (founderProfile.companyName.toLowerCase().includes("ai") && investor.name.toLowerCase().includes("ai")) {
-                     score += 1;
-                     reasons.push(`Interest in AI-driven companies`);
-                }
-                if (founderProfile.companyName.toLowerCase().includes("health") && investor.name.toLowerCase().includes("health")) {
-                     score += 1;
-                     reasons.push(`Interest in Health-related companies`);
-                }
-
-                // Add a random bonus point for variety
-                if (Math.random() > 0.6) { // Increased chance for bonus
-                    score += 1;
-                    reasons.push("Strong general alignment with innovative startups");
-                }
-
-                return {
-                    investor: investor,
-                    score: Math.min(score, 7), // Max score of 7
-                    match_reasons: reasons.length > 0 ? reasons : ["General interest in promising startups"]
-                };
-            }).filter(match => match.score >= 3) // Only show matches with a reasonable score
-              .sort((a, b) => b.score - a.score); // Sort by highest score first
-
-            return { success: true, matches: matches };
+        if (!response.ok) {
+            // If the response status is not 2xx, throw an error
+            const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+            throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.error || response.statusText}`);
         }
-        return { success: false, error: "Mock API endpoint not found." };
-        // --- End Mock Data ---
+
+        // Parse the JSON response
+        return await response.json();
 
     } catch (error) {
         console.error('API call failed:', error);
+        // Re-throw the error so the caller can handle it
         throw error;
     }
 }
@@ -340,11 +241,23 @@ function populateDashboard() {
 /**
  * Populates the Matches Overview section with mock data and animations.
  */
-function populateMatchesOverview() {
+function populateMatchesOverview(apiResponseData) {
+    if (!apiResponseData || !apiResponseData.success || !apiResponseData.matches) {
+        console.error("Invalid API response data provided to populateMatchesOverview:", apiResponseData);
+        // Optionally display an error message to the user
+        return;
+    }
+
+    const matches = apiResponseData.matches;
+    const totalMatches = apiResponseData.total_matches;
+    const highestScore = matches.length > 0 ? matches[0].score : 0; // Matches are sorted by score in Flask
+
     // Animate numbers
-    animateNumber(totalUniqueMatchesElement, 0, 15, 1000);
-    animateNumber(highestMatchScoreElement, 0, 7, 1200);
-    animateNumber(newMatchesWeekElement, 0, 3, 1500);
+    animateNumber(totalUniqueMatchesElement, 0, totalMatches, 1000);
+    animateNumber(highestMatchScoreElement, 0, highestScore, 1200);
+    // For newMatchesWeekElement, you might need actual data from your backend
+    // For now, it could be a fixed value or removed if not supported by the API
+    animateNumber(newMatchesWeekElement, 0, 3, 1500); // Keeping mock for now, adjust as needed
 
     // Type out welcome messages
     typeText(matchesOverviewTitle, "Your Investor Matches", 40);
@@ -352,50 +265,24 @@ function populateMatchesOverview() {
         typeText(matchesOverviewSubtitle, "Explore your potential funding partners.", 30);
     }, 1000);
 
-    // Populate top 3 matches (reusing mock data from findMatches for consistency)
-    const mockInvestorsForOverview = [
-        {
-            name: "Tech Growth Ventures",
-            description: "Specializes in early-stage SaaS and AI startups.",
-            investment_range: [500000, 5000000],
-            risk_tolerance: "high",
-            location: "Silicon Valley",
-            contact: "contact@techgrowth.com",
-            score: 7, // Mock score for overview
-            match_reasons: ["Perfect industry fit", "High investment potential"]
-        },
-        {
-            name: "Global Fintech Partners",
-            description: "A leading fund for FinTech startups.",
-            investment_range: [1000000, 10000000],
-            risk_tolerance: "high",
-            location: "London",
-            contact: "invest@globalfintech.com",
-            score: 6,
-            match_reasons: ["Strong financial sector focus", "Large investment capacity"]
-        },
-        {
-            name: "Health Innovation Fund",
-            description: "Invests in innovative HealthTech solutions.",
-            investment_range: [200000, 3000000],
-            risk_tolerance: "medium",
-            location: "Boston",
-            contact: "info@healthinnov.com",
-            score: 5,
-            match_reasons: ["Aligned with health sector trends", "Supportive ecosystem"]
-        }
-    ];
+    topMatchesListElement.innerHTML = ''; // Clear existing content
 
-    topMatchesListElement.innerHTML = ''; // Clear placeholders
-    mockInvestorsForOverview.forEach((investor, index) => {
+    // Populate top 3 matches from the API response
+    // The Flask backend already sorts by score and returns top matches.
+    // We'll iterate over the 'matches' array from the response.
+    matches.slice(0, 3).forEach((match, index) => { // Take only the top 3 or fewer if less are returned
+        const investor = match.investor; // Access the nested investor object
+        const score = match.score;
+        const reasons = match.match_reasons;
+
         const matchCard = document.createElement('div');
         matchCard.classList.add('match-card', 'animate-pop');
         matchCard.style.animationDelay = `${index * 0.15 + 1.5}s`; // Stagger animation
-        
+
         matchCard.innerHTML = `
             <div class="match-header">
                 <div class="investor-name">${investor.name}</div>
-                <div class="match-score">${investor.score}/7 Match</div>
+                <div class="match-score">${score}/7 Match</div>
             </div>
             <p style="color: var(--text-light); margin-bottom: 0.5rem; font-size: 0.9rem;">
                 ${investor.description}
@@ -406,9 +293,22 @@ function populateMatchesOverview() {
                     | Risk: ${investor.risk_tolerance.charAt(0).toUpperCase() + investor.risk_tolerance.slice(1)}
                 </small>
             </div>
+            ${reasons && reasons.length > 0 ? `
+            <div class="match-reasons-list" style="margin-top: 0.5rem;">
+                <h4 style="margin-bottom: 0.2rem; font-size: 0.85rem; color: var(--accent-color);">Match Reasons:</h4>
+                <ul style="list-style-type: disc; padding-left: 1.2em; font-size: 0.8rem; color: var(--text-light);">
+                    ${reasons.map(reason => `<li>${reason}</li>`).join('')}
+                </ul>
+            </div>
+            ` : ''}
         `;
         topMatchesListElement.appendChild(matchCard);
     });
+
+    // If there are no matches, display a message
+    if (matches.length === 0) {
+        topMatchesListElement.innerHTML = '<p style="text-align: center; color: var(--text-light); margin-top: 2rem;">No matches found based on your profile. Try adjusting your preferences!</p>';
+    }
 }
 
 /**
@@ -576,37 +476,64 @@ document.addEventListener('DOMContentLoaded', () => {
 // Event Listeners
 profileForm.addEventListener('submit', async function(e) {
     e.preventDefault();
-    
+
     showSection('loading-state'); // Show loading state
     typeText(loadingTextElement, "Finding your perfect investor matches...", 40);
 
-
     const founderProfile = {
         industry: document.getElementById('industry').value,
-        fundingStage: document.getElementById('funding-stage').value,
-        riskTolerance: document.getElementById('risk-tolerance').value,
-        investmentAmount: document.getElementById('investment-amount').value,
-        companyName: document.getElementById('company-name').value
+        // Corrected keys to match the snake_case expected by the Flask backend
+        funding_stage: document.getElementById('funding-stage').value,
+        risk_tolerance: document.getElementById('risk-tolerance').value,
+        investment_amount: document.getElementById('investment-amount').value,
+        company_name: document.getElementById('company-name').value // Optional, but good to keep consistent
     };
 
+    console.log("Attempting to submit founder profile and get matches...");
+    console.log("Founder Profile Data:", founderProfile);
+
     try {
-        const response = await apiCall('/match', {
+        const responseData = await apiCall('/api/match', { // Renamed 'response' to 'responseData' for clarity
             method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify(founderProfile)
         });
-        
-        if (response.success) {
-            displayMatches(response.matches, founderProfile);
+
+        console.log("API Call Successful. Received Response Data:", responseData);
+
+        // Check if the API response explicitly indicates success
+        if (responseData && responseData.success) {
+            console.log("API response indicates success. Populating matches overview and displaying detailed matches...");
+            populateMatchesOverview(responseData); // Populate the overview section
+            displayMatches(responseData.matches, founderProfile); // Display detailed matches
+            // Assuming you have an element to display general error messages, hide it on success
+            // document.getElementById('errorMessageDisplay').style.display = 'none';
         } else {
-            displayError(response.error || 'Failed to find matches');
+            // This block will be hit if responseData.success is false or undefined
+            console.error("API returned a successful HTTP status (200 OK) but indicated a logical error or unexpected structure.");
+            console.error("Response success status:", responseData ? responseData.success : "undefined");
+            console.error("Response error message:", responseData ? responseData.error : "N/A");
+
+            // Display the specific error message from the backend if available,
+            // otherwise, use a generic one.
+            const errorMessage = responseData && responseData.error ?
+                                 `Matching service error: ${responseData.error}` :
+                                 "Unable to retrieve matches. Please check your input.";
+            displayError(errorMessage); // Use your existing displayError function
+            console.warn(errorMessage); // Log to console for debugging
         }
-        
+
     } catch (error) {
-        console.error('Error finding matches:', error);
-        displayError('Unable to connect to the matching service. Please try again later.');
+        // This catch block handles network errors or errors thrown by apiCall itself
+        console.error("Error during API call or processing response:", error);
+        const errorMessage = `Failed to connect to the matching service: ${error.message}. Please try again later.`;
+        displayError(errorMessage); // Use your existing displayError function
+        console.warn(errorMessage); // Log to console for debugging
     }
-    
-    showSection('results-section'); // Show results
+
+    showSection('results-section'); // Show results section regardless of success/failure (you might want to adjust this based on error handling)
 });
 
 // Navigation clicks

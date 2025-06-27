@@ -115,7 +115,7 @@ h1, h2, h3, .metric-value, .logo-icon {
     flex: 1;
     padding: 2rem;
     position: relative; /* For absolute positioning of sections */
-    overflow: hidden; /* Hide overflowing content during transitions */
+     /* Hide overflowing content during transitions */
 }
 
 .header {
