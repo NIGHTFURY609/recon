@@ -1,20 +1,28 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // --- DOM Element References ---
+    const reconatorContainer = document.querySelector('.reconator-container');
     const questionCard = document.getElementById('question-card');
     const questionText = document.getElementById('question-text');
     const optionsContainer = document.getElementById('options-container');
-    const progressBarFill = document.getElementById('progress-bar-fill');
-    const questionCounter = document.getElementById('question-counter');
-    const skipBtn = document.getElementById('skip-btn');
+    const sidebarProgressBarFill = document.getElementById('sidebar-progress-bar-fill');
+    const sidebarQuestionCounter = document.getElementById('sidebar-question-counter');
     const backBtn = document.getElementById('back-btn');
     const nextBtn = document.getElementById('next-btn');
+    const yourMatchBtn = document.getElementById('your-match-btn');
     const resultsOverlay = document.getElementById('results-overlay');
     const personaSummary = document.getElementById('persona-summary');
     const backToFundMatchBtn = document.getElementById('back-to-fundmatch');
-
+    const minQuestionsMessage = document.getElementById('min-questions-message');
+    const actionButtonsContainer = document.getElementById('action-buttons');
+    const sidebarQuestionList = document.getElementById('sidebar-question-list');
+    // --- State Variables ---
     let currentQuestionIndex = 0;
-    let userAnswers = {}; // Store user's selected options for each question
-    let questionHistory = []; // To track visited questions for 'Back' button
+    let userAnswers = {}; // Stores answers in { questionId: selectedValue } format
+    let questionHistory = []; // To manage back button navigation
+    const MIN_QUESTIONS_FOR_MATCH = 7; // Minimum questions required to enable "Your Match" button
+    const MAX_QUESTIONS = 10; // Total number of questions
 
+    // --- Quiz Questions Data ---
     const questions = [
         {
             id: 'q1_stage',
@@ -25,7 +33,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 { text: "Series A / Growth", value: "series-a", preference: { fundingStage: "series-a", riskTolerance: "low" } },
                 { text: "Series B+ / Scale-up", value: "series-b", preference: { fundingStage: "series-b", riskTolerance: "low" } }
             ],
-            type: 'single-choice'
+            type: 'single-choice',
+            scrollable: false
         },
         {
             id: 'q2_industry',
@@ -38,232 +47,397 @@ document.addEventListener('DOMContentLoaded', () => {
                 { text: "E-commerce", value: "ecommerce", preference: { industry: "ecommerce" } },
                 { text: "AI/ML", value: "ai", preference: { industry: "ai" } },
                 { text: "Blockchain", value: "blockchain", preference: { industry: "blockchain" } },
-                { text: "IoT", value: "iot", preference: { industry: "iot" } }
+                { text: "IoT", value: "iot", preference: { industry: "iot" } },
+                { text: "CleanTech", value: "cleantech", preference: { industry: "cleantech" } },
+                { text: "BioTech", value: "biotech", preference: { industry: "biotech" } },
+                { text: "Gaming", value: "gaming", preference: { industry: "gaming" } }
             ],
-            type: 'single-choice'
+            type: 'single-choice',
+            scrollable: true
         },
         {
             id: 'q3_involvement',
-            question: "Do you prefer investors who are hands-on or hands-off?",
+            question: "How hands-on do you prefer your investors to be?",
             options: [
-                { text: "Hands-on (mentorship, active guidance)", value: "hands-on", preference: { investorInvolvement: "active" } },
-                { text: "Hands-off (capital only, minimal interference)", value: "hands-off", preference: { investorInvolvement: "passive" } },
-                { text: "Balanced approach", value: "balanced", preference: { investorInvolvement: "balanced" } }
+                { text: "Very involved (mentorship, active board role)", value: "active", preference: { investorInvolvement: "active" } },
+                { text: "Moderately involved (strategic advice, connections)", value: "balanced", preference: { investorInvolvement: "balanced" } },
+                { text: "Hands-off (capital only, minimal interference)", value: "passive", preference: { investorInvolvement: "passive" } },
+                { text: "Accelerator/Incubator program", value: "accelerator", preference: { investorInvolvement: "active" } },
+                { text: "Angel investor with domain expertise", value: "angel", preference: { investorInvolvement: "balanced" } },
+                { text: "Venture Capital (VC) firm", value: "vc", preference: { investorInvolvement: "balanced" } }
             ],
-            type: 'single-choice'
+            type: 'single-choice',
+            scrollable: true
         },
         {
-            id: 'q4_growth',
-            question: "What's your primary growth ambition?",
+            id: 'q4_exit_strategy',
+            question: "What's your long-term vision for your startup's exit?",
             options: [
-                { text: "Rapid, aggressive scaling", value: "aggressive", preference: { growthAmbition: "aggressive", riskTolerance: "high" } },
-                { text: "Steady, sustainable growth", value: "sustainable", preference: { growthAmbition: "sustainable", riskTolerance: "medium" } },
-                { text: "Niche market dominance", value: "niche", preference: { growthAmbition: "niche", riskTolerance: "low" } }
+                { text: "Acquisition by a larger company", value: "acquisition", preference: { exitStrategy: "acquisition" } },
+                { text: "Initial Public Offering (IPO)", value: "ipo", preference: { exitStrategy: "ipo" } },
+                { text: "Sustainable, long-term private company", "value": "private", preference: { exitStrategy: "private" } }
             ],
-            type: 'single-choice'
+            type: 'single-choice',
+            scrollable: false
         },
         {
-            id: 'q5_location',
-            question: "Are you open to investors from any geographical location?",
+            id: 'q5_values',
+            question: "Which investor value aligns most with your company culture?",
             options: [
-                { text: "Yes, global investors are welcome", value: "global", preference: { geographicPreference: "global" } },
-                { text: "Prefer local/regional investors", value: "local", preference: { geographicPreference: "local" } },
-                { text: "Specific regions only (e.g., EU, APAC)", value: "specific", preference: { geographicPreference: "specific" } }
+                { text: "Innovation & Disruption", value: "innovation", preference: { investorValues: "innovation" } },
+                { text: "Social Impact & Sustainability", value: "social_impact", preference: { investorValues: "social_impact" } },
+                { text: "Profitability & Market Dominance", value: "profitability", preference: { investorValues: "profitability" } }
             ],
-            type: 'single-choice'
+            type: 'single-choice',
+            scrollable: false
+        },
+        {
+            id: 'q6_geographic_focus',
+            question: "Do you prefer investors with a specific geographic focus?",
+            options: [
+                { text: "No preference (global reach)", value: "global", preference: { geographicPreference: "global" } },
+                { text: "North America", value: "north_america", preference: { geographicPreference: "north_america" } },
+                { text: "Europe", value: "europe", preference: { geographicPreference: "europe" } },
+                { text: "Asia-Pacific (APAC)", value: "apac", preference: { geographicPreference: "apac" } }
+            ],
+            type: 'single-choice',
+            scrollable: false
+        },
+        {
+            id: 'q7_funding_speed',
+            question: "How quickly do you need to secure funding?",
+            options: [
+                { text: "Urgent (within 3 months)", value: "urgent", preference: { fundingSpeed: "urgent", riskTolerance: "high" } },
+                { text: "Moderate (3-6 months)", value: "moderate", preference: { fundingSpeed: "moderate", riskTolerance: "medium" } },
+                { text: "Flexible (6+ months)", value: "flexible", preference: { fundingSpeed: "flexible", riskTolerance: "low" } }
+            ],
+            type: 'single-choice',
+            scrollable: false
+        },
+        {
+            id: 'q8_network_access',
+            question: "How important is an investor's network to you?",
+            options: [
+                { text: "Crucial (introductions, partnerships)", value: "crucial", preference: { networkAccess: "crucial", investorInvolvement: "active" } },
+                { text: "Helpful (some connections are a bonus)", value: "helpful", preference: { networkAccess: "helpful", investorInvolvement: "balanced" } },
+                { text: "Not a priority (focused on capital)", value: "not_priority", preference: { networkAccess: "not_priority", investorInvolvement: "passive" } }
+            ],
+            type: 'single-choice',
+            scrollable: false
+        },
+        {
+            id: 'q9_deal_structure',
+            question: "What's your preferred deal structure?",
+            options: [
+                { text: "Equity (traditional ownership stake)", value: "equity", preference: { dealStructure: "equity" } },
+                { text: "Convertible Note / SAFE (deferred equity)", value: "convertible", preference: { dealStructure: "convertible" } },
+                { text: "Debt (loans, revenue-based financing)", value: "debt", preference: { dealStructure: "debt" } },
+                { text: "Revenue Share", value: "revenue_share", preference: { dealStructure: "debt" } },
+                { text: "Grant funding", value: "grant", preference: { dealStructure: "grant" } }
+            ],
+            type: 'single-choice',
+            scrollable: true
+        },
+        {
+            id: 'q10_board_seat',
+            question: "Are you open to an investor taking a board seat?",
+            options: [
+                { text: "Yes, if they add significant value", value: "yes_value_add", preference: { boardSeat: "yes", investorInvolvement: "active" } },
+                { text: "Maybe, depends on the investor", value: "maybe", preference: { boardSeat: "maybe", investorInvolvement: "balanced" } },
+                { text: "No, prefer to maintain full control", value: "no_control", preference: { boardSeat: "no", investorInvolvement: "passive" } }
+            ],
+            type: 'single-choice',
+            scrollable: false
         }
     ];
+    // --- Custom Modal for Messages (replaces alert()) ---
+    function showMessageModal(message) {
+        let modal = document.getElementById('custom-message-modal');
+        let modalText = document.getElementById('custom-message-text');
+        let modalCloseBtn = document.getElementById('custom-message-close-btn');
+
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'custom-message-modal';
+            modal.innerHTML = `
+                <div class="custom-message-content">
+                    <p id="custom-message-text"></p>
+                    <button id="custom-message-close-btn">OK</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            modalText = document.getElementById('custom-message-text');
+            modalCloseBtn = document.getElementById('custom-message-close-btn');
+        }
+
+        modalText.textContent = message;
+        modal.classList.add('show');
+
+        const closeModal = () => {
+            modal.classList.remove('show');
+            modalCloseBtn.removeEventListener('click', closeModal);
+            modal.removeEventListener('click', outsideClick);
+        };
+
+        const outsideClick = (event) => {
+            if (event.target === modal) {
+                closeModal();
+            }
+        };
+
+        modalCloseBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', outsideClick);
+    }
+
+    // --- Core Quiz Functions ---
+    function updateProgress() {
+        const answeredQuestionsCount = Object.keys(userAnswers).filter(key => userAnswers[key] !== undefined && userAnswers[key] !== null).length;
+        const totalQuestions = questions.length;
+        const progress = (answeredQuestionsCount / totalQuestions) * 100;
+        sidebarProgressBarFill.style.width = `${progress}%`;
+        sidebarQuestionCounter.textContent = `Questions Answered: ${answeredQuestionsCount} of ${totalQuestions}`;
+
+        updateSidebarCompletedState(); // Update sidebar bubbles
+
+        // Logic for "Your Match" button and message
+        if (currentQuestionIndex === questions.length - 1) { // On the last question
+            nextBtn.style.display = 'none'; // Hide next button
+            yourMatchBtn.style.display = 'block'; // Show Your Match button
+            if (answeredQuestionsCount >= MIN_QUESTIONS_FOR_MATCH) {
+                yourMatchBtn.disabled = false; // Enable if minimum met
+                minQuestionsMessage.style.display = 'none'; // Hide message
+            } else {
+                yourMatchBtn.disabled = true; // Disable if minimum not met
+                minQuestionsMessage.style.display = 'block'; // Show message
+            }
+        } else { // Not on the last question
+            nextBtn.style.display = 'block'; // Show next button
+            yourMatchBtn.style.display = 'none'; // Hide Your Match button
+            minQuestionsMessage.style.display = 'none'; // Hide message
+            nextBtn.disabled = false; // Next button is always enabled for navigation
+        }
+        updateNavigationButtons(); // Always call to ensure correct button visibility/alignment
+    }
 
     function displayQuestion(index) {
         if (index < 0 || index >= questions.length) {
-            showResults();
+            console.error("Invalid question index:", index);
             return;
         }
 
-        const currentQuestion = questions[index];
-        questionText.textContent = currentQuestion.question;
-        optionsContainer.innerHTML = ''; // Clear previous options
+        const currentQ = questions[index];
+        questionText.textContent = currentQ.question;
+        optionsContainer.innerHTML = '';
 
-        currentQuestion.options.forEach(option => {
+        if (currentQ.scrollable) {
+            optionsContainer.classList.add('options-scrollable');
+        } else {
+            optionsContainer.classList.remove('options-scrollable');
+        }
+
+        currentQ.options.forEach(option => {
             const button = document.createElement('button');
             button.classList.add('option-btn');
             button.textContent = option.text;
             button.dataset.value = option.value;
-            button.dataset.id = currentQuestion.id;
 
-            // If this question was previously answered, highlight the selected option
-            if (userAnswers[currentQuestion.id] && userAnswers[currentQuestion.id].value === option.value) {
+            // Mark the selected option
+            if (userAnswers[currentQ.id] === option.value) {
                 button.classList.add('selected');
             }
 
-            button.addEventListener('click', () => selectOption(currentQuestion.id, option.value, option.preference));
+            button.addEventListener('click', () => toggleOption(currentQ.id, option.value, button));
             optionsContainer.appendChild(button);
         });
-
         // Animate card entry
-        questionCard.classList.remove('exit-left', 'exit-right', 'active');
-        void questionCard.offsetWidth; // Trigger reflow
+        questionCard.classList.remove('active', 'exit-left', 'exit-right');
+        questionCard.style.display = 'flex'; // Ensure it's visible
+        void questionCard.offsetWidth; // Trigger reflow for animation
         questionCard.classList.add('active');
-
-        updateProgressBar();
         updateNavigationButtons();
+        updateProgress(); // Call here to update progress bar and counter when a question is displayed
+        updateSidebarActiveState();
     }
 
-    function selectOption(questionId, value, preference) {
-        // Deselect any previously selected option for this question
-        const prevSelected = optionsContainer.querySelector('.option-btn.selected');
-        if (prevSelected) {
-            prevSelected.classList.remove('selected');
+    function toggleOption(questionId, value, clickedButton) {
+        const isSelected = clickedButton.classList.contains('selected');
+        if (isSelected) {
+            // Deselect: remove 'selected' class and remove answer
+            clickedButton.classList.remove('selected');
+            delete userAnswers[questionId];
+        } else {
+            // Select: deselect others, then select this one and store answer
+            Array.from(optionsContainer.children).forEach(button => {
+                button.classList.remove('selected');
+            });
+            clickedButton.classList.add('selected');
+            userAnswers[questionId] = value;
         }
-
-        // Select the new option
-        const newSelected = optionsContainer.querySelector(`[data-value="${value}"]`);
-        if (newSelected) {
-            newSelected.classList.add('selected');
-        }
-
-        // Store the answer
-        userAnswers[questionId] = { value, preference };
-
-        // Automatically move to the next question after a short delay
-        setTimeout(() => {
-            questionCard.classList.add('exit-right'); // Animate current card out
-            questionCard.addEventListener('animationend', () => {
-                questionCard.classList.remove('exit-right', 'active');
-                if (currentQuestionIndex === questionHistory.length - 1) { // If moving forward
-                    questionHistory.push(currentQuestionIndex + 1);
-                }
-                currentQuestionIndex++;
-                displayQuestion(currentQuestionIndex);
-            }, { once: true });
-        }, 300); // Short delay for visual feedback
-    }
-
-    function updateProgressBar() {
-        const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
-        progressBarFill.style.width = `${progress}%`;
-        questionCounter.textContent = `Question ${currentQuestionIndex + 1} of ${questions.length}`;
+        updateProgress(); // Crucial: update progress and sidebar after selection change
     }
 
     function updateNavigationButtons() {
-        backBtn.style.display = currentQuestionIndex > 0 ? 'flex' : 'none';
-        nextBtn.style.display = 'none'; // Hide next button for auto-advance
-        skipBtn.style.display = currentQuestionIndex < questions.length ? 'flex' : 'none';
+        // Back button visibility
+        if (currentQuestionIndex > 0) {
+            backBtn.style.display = 'flex';
+            actionButtonsContainer.classList.add('justify-between'); // Space between Back and Next/Your Match
+        } else {
+            backBtn.style.display = 'none';
+            actionButtonsContainer.classList.remove('justify-between'); // Next/Your Match only, aligned right (default)
+        }
+    }
+
+    function goToNextQuestion() {
+        // No check for answered question here to allow free navigation
+        // Add current question to history before moving forward, only if it's not already the last entry
+        if (questionHistory.length === 0 || questionHistory[questionHistory.length - 1] !== currentQuestionIndex) {
+            questionHistory.push(currentQuestionIndex);
+        }
+
+        questionCard.classList.remove('active');
+        questionCard.classList.add('exit-left');
+        setTimeout(() => {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                displayQuestion(currentQuestionIndex);
+            } else {
+                // All questions navigated, now attempt to show results (will check minimum)
+                showResults();
+            }
+        }, 400); // Allow exit animation to play
+    }
+
+    function goToPreviousQuestion() {
+        questionCard.classList.remove('active');
+        questionCard.classList.add('exit-right');
+
+        setTimeout(() => {
+            if (questionHistory.length > 0) {
+                currentQuestionIndex = questionHistory.pop(); // Go back to the previously visited question
+                displayQuestion(currentQuestionIndex);
+            } else {
+                currentQuestionIndex = 0; // Should only happen if history is empty (i.e., on Q1)
+                displayQuestion(currentQuestionIndex);
+            }
+        }, 400); // Allow exit animation to play
     }
 
     function showResults() {
+        const answeredQuestionsCount = Object.keys(userAnswers).filter(key => userAnswers[key] !== undefined && userAnswers[key] !== null).length;
+        if (answeredQuestionsCount < MIN_QUESTIONS_FOR_MATCH) {
+            showMessageModal(`Please answer at least ${MIN_QUESTIONS_FOR_MATCH} questions to see your match.`);
+            return;
+        }
+
+        // Placeholder for actual persona matching logic
+        // In a real application, you'd send userAnswers to a backend or run a more complex algorithm here.
+        const persona = analyzeAnswers(userAnswers);
+        personaSummary.innerHTML = `
+            <p>Based on your responses, your investor persona is: <strong>${persona.name}</strong>!</p>
+            <p>${persona.description}</p>
+            ${persona.details ? `<p><strong>Key Preferences:</strong></p><ul>${persona.details.map(d => `<li>${d}</li>`).join('')}</ul>` : ''}
+        `;
+        reconatorContainer.querySelector('.main-quiz-content').style.display = 'none';
+        reconatorContainer.querySelector('.quiz-sidebar').style.display = 'none';
+        reconatorContainer.style.justifyContent = 'center'; // Center the results card
         resultsOverlay.style.display = 'flex';
-        void resultsOverlay.offsetWidth; // Trigger reflow
         resultsOverlay.classList.add('active');
+    }
 
-        let persona = {
-            fundingStage: [],
-            industry: [],
-            riskTolerance: [],
-            investorInvolvement: [],
-            growthAmbition: [],
-            geographicPreference: []
-        };
-
-        // Aggregate preferences from user answers
-        for (const qId in userAnswers) {
-            const answer = userAnswers[qId];
-            if (answer && answer.preference) {
-                for (const key in answer.preference) {
-                    if (persona[key]) {
-                        persona[key].push(answer.preference[key]);
-                    }
+    function analyzeAnswers(answers) {
+        // This is a simplified example. A real analysis would be more robust.
+        let preferences = {};
+        for (const qId in answers) {
+            const question = questions.find(q => q.id === qId);
+            if (question) {
+                const selectedOption = question.options.find(opt => opt.value === answers[qId]);
+                if (selectedOption && selectedOption.preference) {
+                    Object.assign(preferences, selectedOption.preference);
                 }
             }
         }
 
-        // Generate summary text
-        let summaryHtml = '<p>Based on your responses, here\'s a summary of your ideal investor persona:</p><ul>';
+        const persona = {
+            name: "Adaptive Entrepreneur",
+            description: "You're flexible and open to various investor types, valuing both capital and strategic input.",
+            details: []
+        };
+        if (preferences.fundingStage) {
+            persona.details.push(`Funding Stage Focus: ${preferences.fundingStage}`);
+        }
+        if (preferences.industry) {
+            persona.details.push(`Preferred Industry: ${preferences.industry}`);
+        }
+        if (preferences.investorInvolvement) {
+            persona.details.push(`Investor Involvement: ${preferences.investorInvolvement}`);
+        }
+        if (preferences.riskTolerance) {
+            persona.details.push(`Risk Tolerance: ${preferences.riskTolerance}`);
+        }
+        // Add more details based on other preferences
 
-        if (persona.fundingStage.length > 0) {
-            summaryHtml += `<li><strong>Funding Stage:</strong> ${Array.from(new Set(persona.fundingStage)).map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(', ')}</li>`;
-        }
-        if (persona.industry.length > 0) {
-            summaryHtml += `<li><strong>Preferred Industries:</strong> ${Array.from(new Set(persona.industry)).map(i => i.charAt(0).toUpperCase() + i.slice(1)).join(', ')}</li>`;
-        }
-        if (persona.riskTolerance.length > 0) {
-            summaryHtml += `<li><strong>Risk Tolerance:</strong> ${Array.from(new Set(persona.riskTolerance)).map(r => r.charAt(0).toUpperCase() + r.slice(1)).join(', ')}</li>`;
-        }
-        if (persona.investorInvolvement.length > 0) {
-            summaryHtml += `<li><strong>Investor Involvement:</strong> ${Array.from(new Set(persona.investorInvolvement)).map(i => i.charAt(0).toUpperCase() + i.slice(1)).join(', ')}</li>`;
-        }
-        if (persona.growthAmbition.length > 0) {
-            summaryHtml += `<li><strong>Growth Ambition:</strong> ${Array.from(new Set(persona.growthAmbition)).map(g => g.charAt(0).toUpperCase() + g.slice(1)).join(', ')}</li>`;
-        }
-        if (persona.geographicPreference.length > 0) {
-            summaryHtml += `<li><strong>Geographic Preference:</strong> ${Array.from(new Set(persona.geographicPreference)).map(g => g.charAt(0).toUpperCase() + g.slice(1)).join(', ')}</li>`;
-        }
-
-        summaryHtml += '</ul><p>This profile will help us find the best matches for you!</p>';
-        personaSummary.innerHTML = summaryHtml;
+        return persona;
     }
 
-    // Event Listeners for Navigation Buttons
-    skipBtn.addEventListener('click', () => {
-        if (currentQuestionIndex < questions.length) {
-            questionCard.classList.add('exit-left'); // Animate current card out
-            questionCard.addEventListener('animationend', () => {
-                questionCard.classList.remove('exit-left', 'active');
-                if (currentQuestionIndex === questionHistory.length - 1) { // If moving forward
-                    questionHistory.push(currentQuestionIndex + 1);
+    function populateSidebar() {
+        sidebarQuestionList.innerHTML = ''; // Clear existing items
+        questions.forEach((q, index) => {
+            const listItem = document.createElement('li');
+            const button = document.createElement('button');
+            button.textContent = index + 1; // Question number
+            button.dataset.questionIndex = index; // Store index for navigation
+            button.addEventListener('click', () => {
+                // Add current question to history before moving forward, only if it's not already the last entry
+                if (questionHistory.length === 0 || questionHistory[questionHistory.length - 1] !== currentQuestionIndex) {
+                    questionHistory.push(currentQuestionIndex);
                 }
-                currentQuestionIndex++;
+                currentQuestionIndex = index;
                 displayQuestion(currentQuestionIndex);
-            }, { once: true });
-        } else {
-            showResults();
-        }
-    });
+            });
+            listItem.appendChild(button);
+            sidebarQuestionList.appendChild(listItem);
+        });
+        updateSidebarActiveState(); // Set initial active state
+        updateSidebarCompletedState(); // Set initial completed state
+    }
 
-    backBtn.addEventListener('click', () => {
-        if (currentQuestionIndex > 0) {
-            questionCard.classList.add('exit-right'); // Animate current card out to the right
-            questionCard.addEventListener('animationend', () => {
-                questionCard.classList.remove('exit-right', 'active');
-                currentQuestionIndex--;
-                questionHistory.pop(); // Remove current from history
-                displayQuestion(currentQuestionIndex);
-            }, { once: true });
-        }
-    });
+    function updateSidebarActiveState() {
+        Array.from(sidebarQuestionList.children).forEach((listItem, index) => {
+            const button = listItem.querySelector('button');
+            if (index === currentQuestionIndex) {
+                button.classList.add('active');
+            } else {
+                button.classList.remove('active');
+            }
+        });
+    }
 
-    // This button is hidden for auto-advance, but keeping the function for potential future use
-    nextBtn.addEventListener('click', () => {
-        if (currentQuestionIndex < questions.length) {
-            questionCard.classList.add('exit-right'); // Animate current card out
-            questionCard.addEventListener('animationend', () => {
-                questionCard.classList.remove('exit-right', 'active');
-                if (currentQuestionIndex === questionHistory.length - 1) { // If moving forward
-                    questionHistory.push(currentQuestionIndex + 1);
-                }
-                currentQuestionIndex++;
-                displayQuestion(currentQuestionIndex);
-            }, { once: true });
-        } else {
-            showResults();
-        }
-    });
+    function updateSidebarCompletedState() {
+        Array.from(sidebarQuestionList.children).forEach((listItem, index) => {
+            const button = listItem.querySelector('button');
+            const questionId = questions[index].id;
+            if (userAnswers[questionId]) {
+                button.classList.add('completed');
+            } else {
+                button.classList.remove('completed');
+            }
+        });
+    }
 
+
+    // --- Event Listeners ---
+    nextBtn.addEventListener('click', goToNextQuestion);
+    backBtn.addEventListener('click', goToPreviousQuestion);
+    yourMatchBtn.addEventListener('click', showResults);
     backToFundMatchBtn.addEventListener('click', () => {
-        // In a real application, you'd pass `userAnswers` back to the main app.
-        // For this demo, we'll simulate redirecting to the main dashboard.
-        // You could use localStorage or URL parameters to pass data.
-        // Example with URL parameters:
-        // const params = new URLSearchParams();
-        // for (const qId in userAnswers) {
-        //     params.append(qId, userAnswers[qId].value);
-        // }
-        // window.location.href = `index.html?${params.toString()}#profile-step`;
-
-        window.location.href = 'index.html#dashboard-section'; // Redirect to main dashboard
+        resultsOverlay.classList.remove('active');
+        resultsOverlay.style.display = 'none';
+        reconatorContainer.querySelector('.main-quiz-content').style.display = 'flex';
+        reconatorContainer.querySelector('.quiz-sidebar').style.display = 'flex';
+        reconatorContainer.style.justifyContent = 'space-between';
+        showMessageModal("You'd typically be redirected to your FundMatch Dashboard here!");
     });
-
-    // Initial display
-    questionHistory.push(currentQuestionIndex);
-    displayQuestion(currentQuestionIndex);
+    // --- Initial Load ---
+    populateSidebar(); // Initialize sidebar first
+    displayQuestion(currentQuestionIndex); // Display the first question
 });

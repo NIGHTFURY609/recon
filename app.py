@@ -1,9 +1,25 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import json
+from pymongo import MongoClient
+from datetime import datetime
+from bson.objectid import ObjectId 
+import os # Import the os module to access environment variables
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for frontend-backend communication
+CORS(app)  # Enable CORS for frontend-backend 
+
+MONGO_CONNECTION_STRING = os.getenv("MONGO_CONNECTION_STRING")
+MONGO_DB_NAME = os.getenv("MONGO_DB_NAME")
+MONGO_COLLECTION_NAME = os.getenv("MONGO_COLLECTION_NAME")
+
+client = None
+db = None
+messages_collection = None
+
 
 # Hard-coded investor profiles
 INVESTORS = [
@@ -74,6 +90,29 @@ INVESTORS = [
         "location": "Los Angeles, CA"
     }
 ]
+
+
+
+
+# Basic validation for environment variables
+if not all([MONGO_CONNECTION_STRING, MONGO_DB_NAME, MONGO_COLLECTION_NAME]):
+    print("CRITICAL ERROR: One or more MongoDB environment variables are not set.")
+    print("Please ensure MONGO_CONNECTION_STRING, MONGO_DB_NAME, and MONGO_COLLECTION_NAME are defined in your .env file.")
+    # In a production app, you might want to raise an exception and stop startup
+else:
+    try:
+        client = MongoClient(MONGO_CONNECTION_STRING)
+        # The ping command is cheap and does not require auth.
+        # It's a good way to check if the server is alive.
+        client.admin.command('ping')
+        db = client[MONGO_DB_NAME]
+        messages_collection = db[MONGO_COLLECTION_NAME]
+        print(f"MongoDB connected successfully to database: {MONGO_DB_NAME}, collection: {MONGO_COLLECTION_NAME}")
+    except Exception as e:
+        print(f"CRITICAL ERROR: Failed to connect to MongoDB: {e}")
+        client = None
+        db = None
+        messages_collection = None
 
 def calculate_match_score(founder_profile, investor):
     """
@@ -238,6 +277,79 @@ def get_funding_stages():
         "stages": stages
     })
 
+@app.route('/api/messages', methods=['GET'])
+def get_messages():
+    """
+    Retrieves chat messages from MongoDB.
+    """
+    if messages_collection is None:
+        return jsonify({"success": False, "error": "Database not connected."}), 500
+
+    try:
+        # Fetch all messages, sorted by timestamp
+        # In MongoDB, `_id` is automatically added and can be used for natural ordering
+        # if you want to ensure order by insertion, or explicitly store a timestamp.
+        # We'll explicitly store a 'timestamp' field.
+        messages_cursor = messages_collection.find().sort("timestamp", 1) # 1 for ascending order
+
+        messages_list = []
+        for msg_doc in messages_cursor:
+            # Convert ObjectId to string for JSON serialization
+            msg_doc['_id'] = str(msg_doc['_id'])
+            # Convert datetime objects to string for JSON serialization
+            if 'timestamp' in msg_doc and isinstance(msg_doc['timestamp'], datetime):
+                msg_doc['timestamp'] = msg_doc['timestamp'].strftime('%b %d, %Y %I:%M %p')
+            messages_list.append(msg_doc)
+
+        return jsonify({
+            "success": True,
+            "messages": messages_list,
+            "server_time": datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ') # Provide server time
+        }), 200
+    except Exception as e:
+        print(f"Error fetching messages from MongoDB: {e}")
+        return jsonify({
+            "success": False,
+            "error": "Failed to retrieve messages from database."
+        }), 500
+
+@app.route('/api/messages/send', methods=['POST'])
+def send_message():
+    """
+    Receives a new message and stores it in MongoDB.
+    Expected JSON payload:
+    {
+        "sender": "founder" or "investor",
+        "content": "Your message content"
+    }
+    """
+    if messages_collection is None:
+        return jsonify({"success": False, "error": "Database not connected."}), 500
+
+    try:
+        message_data = request.get_json()
+        if not message_data or not message_data.get('sender') or not message_data.get('content'):
+            return jsonify({"success": False, "error": "Missing sender or content in message."}), 400
+
+        # Add current server timestamp
+        message_data['timestamp'] = datetime.utcnow()
+
+        # Insert the message into the MongoDB collection
+        result = messages_collection.insert_one(message_data)
+
+        return jsonify({
+            "success": True,
+            "message_id": str(result.inserted_id), # Convert ObjectId to string
+            "status": "Message sent successfully."
+        }), 201 # 201 Created
+    except Exception as e:
+        print(f"Error sending message to MongoDB: {e}")
+        return jsonify({
+            "success": False,
+            "error": "Failed to send message to database."
+        }), 500
+
+
 @app.route('/api/stats')
 def get_platform_stats():
     """Get platform statistics"""
@@ -261,6 +373,8 @@ def get_platform_stats():
             }
         }
     })
+    
+    
 
 if __name__ == '__main__':
     print("🚀 Starting Startup Investor Matching Platform API...")

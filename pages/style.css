@@ -1,3 +1,4 @@
+/* Global Reset and Variables */
 * {
     margin: 0;
     padding: 0;
@@ -5,29 +6,27 @@
 }
 
 :root {
-    --primary-blue: #4A69BD;
-    --light-blue: #E8F0FE;
-    --dark-blue: #2E4CB8;
+    --primary-blue: #007BFF; /* Brighter blue for primary actions/selected state */
+    --light-blue: #E0F0FF; /* Lighter blue for unselected options */
+    --dark-blue: #0056b3;
     --success-green: #27AE60;
     --danger-red: #E74C3C;
-    --text-dark: #2C3E50;
-    --text-light: #7F8C8D;
-    --border-light: #E0E6ED;
+    --text-dark: #333333; /* Darker text for better contrast */
+    --text-light: #666666; /* Softer text for subtitles/counters */
+    --border-light: #DDDDDD; /* Lighter border */
     --white: #FFFFFF;
-    --shadow: 0 8px 25px rgba(0, 0, 0, 0.2); /* Stronger shadow for cards */
-    --soft-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-
-    /* Background images - using the ones provided */
-    --bg-image-1: url('image 1.jpg'); /* Blue/purple gradient with hexagons */
-    --bg-image-2: url('image 2.jpg'); /* Blue with rocket outline */
-    --bg-image-3: url('image 3.avif'); /* Paper plane with icons */
-    --bg-image-4: url('image  4.jpg'); /* Startup illustration */
-    --bg-image-5: url('image 5.png'); /* START UP word art */
+    --shadow-strong: 0 10px 30px rgba(0, 0, 0, 0.15); /* Stronger, diffused shadow for container */
+    --shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.08); /* Softer shadow for cards/buttons */
+    --bg-grey-light: #F8F8F8; /* Light grey background for body */
+    --sidebar-width: 250px; /* Define sidebar width */
+    --sidebar-bg: #f0f4f8; /* Light background for sidebar */
+    --sidebar-border: #e0e0e0; /* Border for sidebar */
 }
 
 body {
-    font-family: 'Sevillana', cursive, 'Arial', sans-serif;
-    background-image: var(--bg-image-2); /* Using image 2 for Reconator background */
+    font-family: 'IBM Plex Mono', monospace, 'Arial', sans-serif;
+    background-color: var(--bg-grey-light); /* Keep a fallback color */
+    background-image: url('image3.jpg'); /* Add this line */
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -42,86 +41,121 @@ body {
 }
 
 h1, h2, h3 {
-    font-family: 'Sevillana', cursive, 'Arial', sans-serif;
-    text-shadow: 1px 1px 0px rgba(0,0,0,0.1);
+    font-family: 'IBM Plex Mono', monospace, 'Arial', sans-serif;
+    text-shadow: none;
 }
 
 .reconator-container {
-    background-color: rgba(255, 255, 255, 0.95); /* Slightly opaque white */
-    border-radius: 15px;
-    padding: 30px;
-    box-shadow: var(--shadow);
+    background-color: var(--white);
+    border-radius: 20px;
+    padding: 30px; /* Adjusted padding to accommodate new layout */
+    box-shadow: var(--shadow-strong);
     text-align: center;
-    max-width: 600px;
+    max-width: 1200px; /* Increased max-width to make it wider */
     width: 100%;
     position: relative;
-    overflow: hidden; /* For card transitions */
-    min-height: 550px; /* Ensure enough height for content */
+    overflow: hidden;
+    min-height: 700px; /* Ensure enough height for content and sidebar */
+    display: flex;
+    flex-direction: row; /* Arrange header/main content and sidebar side-by-side */
+    gap: 30px; /* Space between main content and sidebar */
+}
+
+/* Main Content Area (Quiz Header + Question Card + Buttons) */
+.main-quiz-content {
+    flex: 1; /* Allows main content to take up available space */
     display: flex;
     flex-direction: column;
     justify-content: space-between;
 }
 
 .reconator-header {
-    margin-bottom: 20px;
+    margin-bottom: 20px; /* Adjusted margin */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .reconator-header h1 {
-    font-size: 2.5rem;
-    color: var(--primary-blue);
-    margin-bottom: 10px;
+    font-size: 2.8rem;
+    color: var(--primary-blue); /* Changed title color to primary blue */
+    margin-bottom: 5px;
     animation: slideInDown 0.8s ease-out forwards;
 }
 
-.reconator-header p {
+#reconator-subtitle {
     font-size: 1.1rem;
     color: var(--text-light);
-    margin-bottom: 20px;
-    animation: fadeIn 1s ease-out forwards 0.2s;
+    margin-bottom: 0;
+}
+
+#permanent-tagline {
+    font-size: 0.95rem;
+    color: var(--text-dark); /* A bit darker for readability */
+    margin-top: 5px;
+    font-weight: 500;
+}
+
+/* Progress section within main content - kept for consistency though it's mirrored in sidebar */
+.progress-section {
+    width: 100%;
+    display: flex; /* Kept flex, but visibility can be controlled by JS/media queries if needed */
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-top: 15px;
+    padding: 10px 0;
+    border-top: 1px solid var(--border-light);
+    border-bottom: 1px solid var(--border-light);
+    display: none; /* Hide main progress bar and counter as they are now in the sidebar */
 }
 
 .progress-bar-container {
-    width: 80%;
-    height: 10px;
+    flex-grow: 1;
+    height: 8px;
     background-color: var(--border-light);
-    border-radius: 5px;
-    margin: 0 auto 10px;
+    border-radius: 4px;
     overflow: hidden;
-    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+    width: 80%;
 }
 
 .progress-bar-fill {
     height: 100%;
     width: 0%;
-    background-color: var(--success-green);
-    border-radius: 5px;
+    background-color: var(--primary-blue);
+    border-radius: 4px;
     transition: width 0.5s ease-out;
 }
 
 .question-counter {
-    font-size: 0.9rem;
+    font-size: 1rem;
     color: var(--text-light);
+    font-weight: bold;
+    margin-top: 5px;
 }
 
+/* Card Area and Question Card */
 .card-area {
     flex-grow: 1;
     display: flex;
     justify-content: center;
     align-items: center;
     position: relative;
-    min-height: 250px; /* Ensure cards have space */
-    margin-bottom: 20px;
+    min-height: 280px;
+    margin-top: 30px;
+    margin-bottom: 40px;
 }
 
 .question-card {
     background-color: var(--white);
-    border: 1px solid var(--border-light);
+    border: none;
     border-radius: 12px;
-    padding: 25px;
-    box-shadow: var(--soft-shadow);
+    padding: 0;
+    box-shadow: none;
     width: 90%;
-    max-width: 450px;
-    position: absolute; /* Allows cards to stack and transition */
+    max-width: 650px;
+    position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
@@ -131,7 +165,18 @@ h1, h2, h3 {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    min-height: 200px;
+    min-height: 250px;
+}
+
+.question-content-wrapper {
+    display: flex;
+    flex-direction: row;
+    gap: 40px;
+    width: 100%;
+    align-items: flex-start;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: var(--shadow-soft);
 }
 
 .question-card.active {
@@ -161,104 +206,230 @@ h1, h2, h3 {
     to { opacity: 0; transform: translate(50%, -50%) scale(0.8); }
 }
 
-.question-text {
-    font-size: 1.3rem;
-    color: var(--text-dark);
-    margin-bottom: 25px;
-    font-weight: bold;
-}
-
 .options-container {
+    flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 12px;
     width: 100%;
+}
+
+.options-scrollable {
+    max-height: 300px; /* Increased from 180px */
+    overflow-y: auto;
+    &::-webkit-scrollbar {
+        width: 8px;
+    }
+    &::-webkit-scrollbar-thumb {
+        background-color: var(--border-light);
+        border-radius: 4px;
+    }
+    &::-webkit-scrollbar-track {
+        background-color: transparent;
+    }
+}
+
+.question-text {
+    flex: 1.5;
+    font-size: 1.5rem;
+    color: var(--text-dark);
+    margin-bottom: 0;
+    font-weight: bold;
+    text-align: left;
+    padding-left: 15px;
+    flex-shrink: 0;
 }
 
 .option-btn {
-    background-color: var(--light-blue);
-    color: var(--primary-blue);
-    padding: 12px 20px;
-    border: 2px solid var(--primary-blue);
-    border-radius: 8px;
-    font-size: 1rem;
+    background-color: var(--bg-grey-light);
+    color: var(--text-dark);
+    padding: 14px 25px;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.1rem;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     width: 100%;
-    text-align: center;
-    font-family: 'Sevillana', cursive, 'Arial', sans-serif;
-    font-weight: bold;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    text-align: left;
+    font-family: 'IBM Plex Mono', monospace, 'Arial', sans-serif;
+    font-weight: 500;
+    box-shadow: none;
 }
 
 .option-btn:hover {
-    background-color: var(--primary-blue);
-    color: var(--white);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    background-color: var(--light-blue);
+    color: var(--primary-blue);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-soft);
 }
 
 .option-btn.selected {
-    background-color: var(--success-green);
+    background-color: var(--primary-blue);
     color: var(--white);
-    border-color: var(--success-green);
-    transform: scale(1.02);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    border-color: var(--primary-blue);
+    transform: scale(1.01);
+    box-shadow: var(--shadow-soft);
 }
 
+/* Action Buttons (Previous/Next) */
 .action-buttons {
     display: flex;
-    justify-content: space-around;
-    gap: 15px;
-    margin-top: 20px;
+    justify-content: flex-end; /* Always align to right by default */
+    align-items: center;
+    gap: 20px;
+    margin-top: 30px;
+    padding: 0 10px;
+}
+
+.action-buttons.justify-between {
+    justify-content: space-between; /* Use when Back button is present */
 }
 
 .action-btn {
-    background-color: var(--border-light);
+    background-color: var(--bg-grey-light);
     color: var(--text-dark);
-    padding: 12px 25px;
+    padding: 15px 30px;
     border: none;
-    border-radius: 8px;
-    font-size: 1rem;
+    border-radius: 10px;
+    font-size: 1.1rem;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     flex: 1;
+    max-width: 180px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-family: 'Sevillana', cursive, 'Arial', sans-serif;
-    font-weight: bold;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    font-family: 'IBM Plex Mono', monospace, 'Arial', sans-serif;
+    font-weight: 500;
+    box-shadow: var(--shadow-soft);
 }
 
 .action-btn:hover {
-    background-color: #D0D7DE;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    background-color: #E8E8E8;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.1);
 }
 
-.skip-btn {
-    background-color: var(--danger-red);
-    color: var(--white);
-}
-
-.skip-btn:hover {
-    background-color: #C0392B;
-}
-
-.next-btn {
+.action-btn.primary-btn {
     background-color: var(--primary-blue);
     color: var(--white);
+    font-weight: bold;
+    max-width: 220px;
+    flex: 1.5;
 }
 
-.next-btn:hover {
+.action-btn.primary-btn:hover {
     background-color: var(--dark-blue);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.15);
 }
 
-.btn-icon {
-    margin-right: 8px;
-    font-size: 1.2rem;
+.action-btn:disabled {
+    background-color: #cccccc;
+    color: #888888;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
 }
+
+.min-questions-message {
+    color: var(--danger-red);
+    font-size: 0.95rem;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    font-weight: bold;
+    text-align: center;
+    display: none; /* Hidden by default */
+}
+
+/* --- Sidebar Styles --- */
+.quiz-sidebar {
+    width: var(--sidebar-width);
+    background-color: var(--sidebar-bg);
+    border-left: 1px solid var(--sidebar-border);
+    border-radius: 0 20px 20px 0; /* Match container border-radius on right side */
+    padding: 30px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    text-align: left;
+    position: relative;
+}
+
+.sidebar-progress-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--sidebar-border);
+    margin-bottom: 20px;
+}
+
+.sidebar-progress-section .progress-bar-container {
+    width: 90%; /* Adjust for sidebar */
+}
+
+.sidebar-question-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    overflow-y: auto;
+    flex-grow: 1;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
+    gap: 10px;
+    justify-content: center;
+}
+
+.sidebar-question-list li {
+    margin-bottom: 0;
+    display: flex;
+    justify-content: center;
+}
+
+.sidebar-question-list button {
+    background-color: var(--bg-grey-light);
+    border: 1px solid var(--border-light);
+    color: var(--text-dark);
+    font-family: 'IBM Plex Mono', monospace, 'Arial', sans-serif;
+    font-size: 0.95rem;
+    font-weight: bold;
+    width: 40px;
+    height: 40px;
+    /* border-radius: 50%; */ /* Removed for hexagon shape */
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-soft); /* Added for hexagon shape */
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    transform: rotate(0deg); /* Initial rotation for hexagon */
+}
+
+.sidebar-question-list button:hover:not(.active):not(.completed) {
+    background-color: var(--light-blue);
+    color: var(--primary-blue);
+    border-color: var(--primary-blue);
+    transform: translateY(-1px) rotate(0deg); /* Maintain shape on hover */
+}
+
+.sidebar-question-list button.completed {
+    background-color: var(--success-green);
+    color: var(--white);
+    border-color: var(--success-green);
+    box-shadow: var(--shadow-soft);
+}
+
+.sidebar-question-list button.active {
+    background-color: var(--primary-blue);
+    color: var(--white);
+    border-color: var(--primary-blue);
+    box-shadow: var(--shadow-soft);
+    transform: scale(1.1) rotate(0deg); /* Maintain shape on active */
+}
+
 
 /* Results Overlay */
 .results-overlay {
@@ -286,7 +457,7 @@ h1, h2, h3 {
     background-color: var(--white);
     border-radius: 15px;
     padding: 30px;
-    box-shadow: var(--shadow);
+    box-shadow: var(--shadow-strong);
     text-align: center;
     max-width: 500px;
     width: 90%;
@@ -338,52 +509,172 @@ h1, h2, h3 {
 
 
 /* Responsive Design */
-@media (max-width: 768px) {
-    body {
-        padding: 10px;
+@media (max-width: 992px) { /* Adjust breakpoint for sidebar */
+    .reconator-container {
+        flex-direction: column; /* Stack main content and sidebar on smaller screens */
+        padding: 25px;
+        min-height: 90vh;
+        max-width: 100%;
+        border-radius: 15px;
     }
 
-    .reconator-container {
+    .quiz-sidebar {
+        width: 100%; /* Full width for sidebar on mobile */
+        border-left: none;
+        border-top: 1px solid var(--sidebar-border); /* Add top border */
+        border-radius: 15px; /* Match container border-radius */
         padding: 20px;
-        min-height: 90vh;
+        order: -1; /* Move sidebar to the top on mobile */
+    }
+
+    .sidebar-progress-section {
+        border-bottom: none; /* Remove bottom border if it's the top element */
+        padding-bottom: 0;
+        margin-bottom: 10px;
+    }
+
+    .sidebar-question-list {
+        max-height: 120px; /* Limit height and allow scroll for mobile sidebar */
+        grid-template-columns: repeat(auto-fit, minmax(40px, 1fr)); /* Grid for compact buttons */
+        gap: 8px;
+    }
+    .sidebar-question-list li {
+        margin-bottom: 0; /* Remove list item margin for grid layout */
+    }
+
+    .sidebar-question-list button {
+        font-size: 0.9rem;
+        width: 38px; /* Slightly smaller on mobile */
+        height: 38px;
     }
 
     .reconator-header h1 {
         font-size: 2rem;
     }
 
-    .reconator-header p {
-        font-size: 1rem;
+    .progress-container-with-percentage {
+        width: 95%;
+        gap: 10px;
     }
 
     .question-card {
-        padding: 20px;
+        padding: 0;
+        max-width: 100%;
+        min-height: 200px;
+    }
+
+    .question-content-wrapper {
+        flex-direction: column;
+        gap: 20px;
+        padding: 25px;
     }
 
     .question-text {
-        font-size: 1.1rem;
+        font-size: 1.2rem;
+        text-align: center;
+        padding-left: 0;
+        max-height: 100px;
     }
 
-    .option-btn, .action-btn {
-        padding: 10px 15px;
-        font-size: 0.9rem;
+    .options-container {
+        flex: auto;
+    }
+
+    .options-scrollable {
+        max-height: 150px;
+    }
+
+    .option-btn {
+        padding: 12px 15px;
+        font-size: 1rem;
     }
 
     .action-buttons {
         flex-direction: column;
-        gap: 10px;
+        gap: 15px;
+        margin-top: 25px;
+        padding: 0;
     }
 
-    .btn-icon {
-        margin-right: 5px;
+    .action-btn {
+        padding: 12px 20px;
         font-size: 1rem;
+        max-width: none;
+        flex: auto;
+    }
+
+    .action-btn.primary-btn {
+        max-width: none;
+        flex: auto;
     }
 
     .results-card {
-        padding: 20px;
+        padding: 25px;
     }
 
     .results-card h2 {
-        font-size: 1.5rem;
+        font-size: 1.8rem;
     }
+}
+/* Styles for the custom message modal */
+#custom-message-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+#custom-message-modal.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.custom-message-content {
+    background-color: var(--white);
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: var(--shadow-strong);
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+    position: relative;
+    transform: translateY(-20px);
+    transition: transform 0.3s ease;
+}
+#custom-message-modal.show .custom-message-content {
+    transform: translateY(0);
+}
+
+#custom-message-text {
+    font-size: 1.1rem;
+    color: var(--text-dark);
+    margin-bottom: 25px;
+    line-height: 1.5;
+}
+
+#custom-message-close-btn {
+    background-color: var(--primary-blue);
+    color: var(--white);
+    border: none;
+    padding: 12px 25px;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    font-family: 'IBM Plex Mono', monospace, 'Arial', sans-serif;
+    font-weight: bold;
+}
+
+#custom-message-close-btn:hover {
+    background-color: var(--dark-blue);
+    transform: translateY(-1px);
 }

@@ -314,113 +314,138 @@ function populateMatchesOverview(apiResponseData) {
 /**
  * Populates the Messages section with mock data and animations.
  */
-function populateMessages() {
+async function populateMessages() {
     typeText(messagesTitle, "Your Conversations", 40);
     setTimeout(() => {
         typeText(messagesSubtitle, "Stay connected with investors and partners.", 30);
     }, 1000);
 
-    const mockMessages = [
-        { sender: 'investor', content: 'Greetings, Founder! We\'ve been analyzing your pitch deck. Your project looks quite intriguing!', timestamp: '10:30 AM' },
-        { sender: 'founder', content: 'That\'s fantastic to hear! I\'m thrilled you found it interesting. What aspects caught your eye?', timestamp: '10:35 AM' },
-        { sender: 'investor', content: 'The innovative use of blockchain in your supply chain solution is particularly compelling. We see great potential there.', timestamp: 'Yesterday, 09:00 AM' },
-        { sender: 'founder', content: 'Indeed! We believe it offers unparalleled transparency and efficiency. Would you be open to a brief virtual meeting to discuss the tech in more detail?', timestamp: 'Yesterday, 09:15 AM' },
-        { sender: 'investor', content: 'Affirmative! Our calendar is open next Tuesday. How about 2 PM PST? This could be a fruitful alliance.', timestamp: 'Yesterday, 09:20 AM' },
-    ];
+    messageListElement.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-light);">Loading messages...</div>'; // Loading indicator
+    
+    try {
+        const responseData = await apiCall('/api/messages', {
+            method: 'GET' // Use GET method for retrieving messages
+        });
 
-    messageListElement.innerHTML = ''; // Clear existing messages
-    mockMessages.forEach((msg, index) => {
-        const messageItem = document.createElement('div');
-        messageItem.classList.add('message-item', msg.sender);
-        messageItem.style.animationDelay = `${index * 0.1}s`; // Stagger animation
 
-        const avatarDiv = document.createElement('div');
-        avatarDiv.classList.add('message-avatar');
-        avatarDiv.style.backgroundColor = characterAvatars[msg.sender].color;
-        avatarDiv.textContent = characterAvatars[msg.sender].icon;
-
-        const contentDiv = document.createElement('div');
-        contentDiv.classList.add('message-content');
-        contentDiv.innerHTML = `
-            ${msg.content}
-            <span class="message-timestamp">${msg.timestamp}</span>
-        `;
         
-        messageItem.appendChild(avatarDiv);
-        messageItem.appendChild(contentDiv);
-        messageListElement.appendChild(messageItem);
-    });
-    // Scroll to the bottom of the message list after populating
-    messageListElement.scrollTop = messageListElement.scrollHeight;
+
+        console.log("Messages API Response:", responseData);
+
+        if (responseData && responseData.success && responseData.messages) {
+            const messages = responseData.messages;
+            messageListElement.innerHTML = ''; // Clear loading indicator
+
+            messages.forEach((msg, index) => {
+                const messageItem = document.createElement('div');
+                messageItem.classList.add('message-item', msg.sender);
+                messageItem.style.animationDelay = `${index * 0.1}s`; // Stagger animation
+
+                const avatarDiv = document.createElement('div');
+                avatarDiv.classList.add('message-avatar');
+                // Ensure characterAvatars is defined and has 'founder' and 'investor' keys
+                if (characterAvatars && characterAvatars[msg.sender]) {
+                    avatarDiv.style.backgroundColor = characterAvatars[msg.sender].color;
+                    avatarDiv.textContent = characterAvatars[msg.sender].icon;
+                } else {
+                    // Fallback if avatar data is missing
+                    avatarDiv.style.backgroundColor = '#ccc';
+                    avatarDiv.textContent = msg.sender === 'founder' ? 'F' : 'I';
+                }
+
+
+                const contentDiv = document.createElement('div');
+                contentDiv.classList.add('message-content');
+                contentDiv.innerHTML = `
+                    ${msg.content}
+                    <span class="message-timestamp">${msg.timestamp}</span>
+                `;
+
+                messageItem.appendChild(avatarDiv);
+                messageItem.appendChild(contentDiv);
+                messageListElement.appendChild(messageItem);
+            });
+
+            // Scroll to the bottom of the message list after populating
+            messageListElement.scrollTop = messageListElement.scrollHeight;
+
+            if (messages.length === 0) {
+                messageListElement.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-light);">No messages yet. Start a conversation!</div>';
+            }
+
+        } else {
+            console.error("API returned an error or unexpected structure for messages:", responseData);
+            messageListElement.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--error-color);">Failed to load messages. Please try again.</div>';
+        }
+
+    } catch (error) {
+        console.error('Error fetching messages:', error);
+        messageListElement.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--error-color);">Unable to connect to the message service.</div>';
+    }
 }
+
 
 /**
  * Sends a mock message and appends it to the message list.
  */
-function sendMessage() {
-    const messageContent = messageInput.value.trim();
-    if (messageContent === '') return;
+async function sendMessage(sender, content) {
+    // Trim whitespace from the message content
+    if (!content.trim()) {
+        console.warn("Cannot send empty message.");
+        return; // Do not proceed if the message is empty or just whitespace
+    }
 
-    const now = new Date();
-    const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-    const messageItem = document.createElement('div');
-    messageItem.classList.add('message-item', 'sent');
-
-    const avatarDiv = document.createElement('div');
-    avatarDiv.classList.add('message-avatar');
-    avatarDiv.style.backgroundColor = characterAvatars['founder'].color;
-    avatarDiv.textContent = characterAvatars['founder'].icon;
-
-    const contentDiv = document.createElement('div');
-    contentDiv.classList.add('message-content');
-    contentDiv.innerHTML = `
-        ${messageContent}
-        <span class="message-timestamp">${timeString}</span>
-    `;
-
-    messageItem.appendChild(avatarDiv);
-    messageItem.appendChild(contentDiv);
-    messageListElement.appendChild(messageItem);
-    messageInput.value = ''; // Clear input
-
-    // Scroll to the bottom
-    messageListElement.scrollTop = messageListElement.scrollHeight;
-
-    // Simulate a reply after a short delay
-    typingIndicator.style.display = 'flex'; // Show typing indicator
-    messageListElement.scrollTop = messageListElement.scrollHeight; // Scroll to show indicator
-
-    setTimeout(() => {
-        typingIndicator.style.display = 'none'; // Hide typing indicator
-        const replyItem = document.createElement('div');
-        replyItem.classList.add('message-item', 'received');
-        const replyTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const randomReplies = [
-            "Understood. We'll process your query and respond shortly.",
-            "Acknowledged. Our team is reviewing this now.",
-            "Affirmative. Awaiting further data for comprehensive response.",
-            "Message received. Calculating optimal next step."
-        ];
-        const replyContent = randomReplies[Math.floor(Math.random() * randomReplies.length)];
-
-        const replyAvatarDiv = document.createElement('div');
-        replyAvatarDiv.classList.add('message-avatar');
-        replyAvatarDiv.style.backgroundColor = characterAvatars['investor'].color;
-        replyAvatarDiv.textContent = characterAvatars['investor'].icon;
-
-        const replyContentDiv = document.createElement('div');
-        replyContentDiv.classList.add('message-content');
-        replyContentDiv.innerHTML = `
-            ${replyContent}
-            <span class="message-timestamp">${replyTime}</span>
+    try {
+        // Add a temporary message to the UI immediately for better user experience (optimistic update)
+        // This makes the UI feel more responsive while waiting for the API call.
+        const tempMessageItem = document.createElement('div');
+        tempMessageItem.classList.add('message-item', sender, 'sending'); // 'sending' class can be used for styling (e.g., lighter color)
+        tempMessageItem.innerHTML = `
+            <div class="message-avatar" style="background-color: ${characterAvatars[sender].color};">${characterAvatars[sender].icon}</div>
+            <div class="message-content">${content}<span class="message-timestamp">Sending...</span></div>
         `;
-        
-        replyItem.appendChild(replyAvatarDiv);
-        replyItem.appendChild(replyContentDiv);
-        messageListElement.appendChild(replyItem);
+        messageListElement.appendChild(tempMessageItem);
+        // Scroll to the bottom to show the new message
         messageListElement.scrollTop = messageListElement.scrollHeight;
-    }, 2000 + Math.random() * 1000); // Reply after 2-3 seconds
+
+        // Make the API call to send the message to your Flask backend
+        const responseData = await apiCall('/api/messages/send', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ sender: sender, content: content }) // Send sender and content
+        });
+
+        console.log("Send Message API Response:", responseData);
+
+        // Check if the message was successfully stored in the database
+        if (responseData && responseData.success) {
+            console.log("Message sent successfully!");
+            // Remove the temporary message. We will re-fetch all messages to ensure
+            // the server-generated timestamp is displayed correctly and the message
+            // is in its final sorted position.
+            messageListElement.removeChild(tempMessageItem);
+            populateMessages(); // Re-fetch all messages to update the chat UI
+            if (messageInput) messageInput.value = ''; // Clear the input field after sending
+        } else {
+            console.error("API returned an error when sending message:", responseData.error);
+            // Update the temporary message to indicate an error
+            tempMessageItem.classList.remove('sending');
+            tempMessageItem.classList.add('error'); // Add an 'error' class for visual feedback
+            tempMessageItem.querySelector('.message-timestamp').textContent = 'Failed to send';
+            // Optionally, display a more prominent user-facing error message
+        }
+    } catch (error) {
+        console.error('Error sending message:', error);
+        // Handle network errors or other exceptions during the API call
+        if (tempMessageItem) {
+            tempMessageItem.classList.remove('sending');
+            tempMessageItem.classList.add('error');
+            tempMessageItem.querySelector('.message-timestamp').textContent = 'Network Error';
+        }
+        // Optionally, display a general error message to the user
+    }
 }
 
 
@@ -565,10 +590,34 @@ viewAllMatchesButton.addEventListener('click', () => {
     showSection('results-section');
 });
 
-sendMessageBtn.addEventListener('click', sendMessage); // Event listener for send button
-messageInput.addEventListener('keypress', (e) => { // Send message on Enter key
-    if (e.key === 'Enter') {
-        sendMessage();
+
+document.addEventListener('DOMContentLoaded', () => {
+    const messageInput = document.getElementById('message-input');
+    const sendMessageButton = document.getElementById('send-message-btn');
+    // Ensure messageListElement is also correctly referenced if not global
+    // const messageListElement = document.getElementById('message-list');
+
+    if (sendMessageButton && messageInput) {
+        sendMessageButton.addEventListener('click', () => {
+            const messageContent = messageInput.value;
+            // Determine the current sender. In a real app, this would come from
+            // user authentication state (e.g., if a founder is logged in, sender is 'founder').
+            // For this example, let's assume the user is a 'founder'.
+            const currentSender = 'founder'; // You might make this dynamic based on user role
+            sendMessage(currentSender, messageContent);
+        });
+    }
+
+    // Allow sending messages by pressing Enter in the input field
+    if (messageInput) {
+        messageInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevent default form submission if input is inside a form
+                const messageContent = messageInput.value;
+                const currentSender = 'founder'; // Same as above
+                sendMessage(currentSender, messageContent);
+            }
+        });
     }
 });
 
