@@ -1,0 +1,389 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary-blue: #4A69BD;
+    --light-blue: #E8F0FE;
+    --dark-blue: #2E4CB8;
+    --success-green: #27AE60;
+    --danger-red: #E74C3C;
+    --text-dark: #2C3E50;
+    --text-light: #7F8C8D;
+    --border-light: #E0E6ED;
+    --white: #FFFFFF;
+    --shadow: 0 8px 25px rgba(0, 0, 0, 0.2); /* Stronger shadow for cards */
+    --soft-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+    /* Background images - using the ones provided */
+    --bg-image-1: url('image 1.jpg'); /* Blue/purple gradient with hexagons */
+    --bg-image-2: url('image 2.jpg'); /* Blue with rocket outline */
+    --bg-image-3: url('image 3.avif'); /* Paper plane with icons */
+    --bg-image-4: url('image  4.jpg'); /* Startup illustration */
+    --bg-image-5: url('image 5.png'); /* START UP word art */
+}
+
+body {
+    font-family: 'Sevillana', cursive, 'Arial', sans-serif;
+    background-image: var(--bg-image-2); /* Using image 2 for Reconator background */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    color: var(--text-dark);
+    line-height: 1.6;
+    overflow: hidden; /* Hide scrollbars for a cleaner look */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+h1, h2, h3 {
+    font-family: 'Sevillana', cursive, 'Arial', sans-serif;
+    text-shadow: 1px 1px 0px rgba(0,0,0,0.1);
+}
+
+.reconator-container {
+    background-color: rgba(255, 255, 255, 0.95); /* Slightly opaque white */
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: var(--shadow);
+    text-align: center;
+    max-width: 600px;
+    width: 100%;
+    position: relative;
+    overflow: hidden; /* For card transitions */
+    min-height: 550px; /* Ensure enough height for content */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.reconator-header {
+    margin-bottom: 20px;
+}
+
+.reconator-header h1 {
+    font-size: 2.5rem;
+    color: var(--primary-blue);
+    margin-bottom: 10px;
+    animation: slideInDown 0.8s ease-out forwards;
+}
+
+.reconator-header p {
+    font-size: 1.1rem;
+    color: var(--text-light);
+    margin-bottom: 20px;
+    animation: fadeIn 1s ease-out forwards 0.2s;
+}
+
+.progress-bar-container {
+    width: 80%;
+    height: 10px;
+    background-color: var(--border-light);
+    border-radius: 5px;
+    margin: 0 auto 10px;
+    overflow: hidden;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.progress-bar-fill {
+    height: 100%;
+    width: 0%;
+    background-color: var(--success-green);
+    border-radius: 5px;
+    transition: width 0.5s ease-out;
+}
+
+.question-counter {
+    font-size: 0.9rem;
+    color: var(--text-light);
+}
+
+.card-area {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    min-height: 250px; /* Ensure cards have space */
+    margin-bottom: 20px;
+}
+
+.question-card {
+    background-color: var(--white);
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: var(--soft-shadow);
+    width: 90%;
+    max-width: 450px;
+    position: absolute; /* Allows cards to stack and transition */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: all 0.5s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+}
+
+.question-card.active {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+    animation: cardEnter 0.5s ease-out forwards;
+}
+
+.question-card.exit-left {
+    animation: cardExitLeft 0.5s ease-in forwards;
+}
+
+.question-card.exit-right {
+    animation: cardExitRight 0.5s ease-in forwards;
+}
+
+@keyframes cardEnter {
+    from { opacity: 0; transform: translate(-50%, -40%) scale(0.9); }
+    to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+@keyframes cardExitLeft {
+    to { opacity: 0; transform: translate(-150%, -50%) scale(0.8); }
+}
+
+@keyframes cardExitRight {
+    to { opacity: 0; transform: translate(50%, -50%) scale(0.8); }
+}
+
+.question-text {
+    font-size: 1.3rem;
+    color: var(--text-dark);
+    margin-bottom: 25px;
+    font-weight: bold;
+}
+
+.options-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 100%;
+}
+
+.option-btn {
+    background-color: var(--light-blue);
+    color: var(--primary-blue);
+    padding: 12px 20px;
+    border: 2px solid var(--primary-blue);
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+    text-align: center;
+    font-family: 'Sevillana', cursive, 'Arial', sans-serif;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.option-btn:hover {
+    background-color: var(--primary-blue);
+    color: var(--white);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.option-btn.selected {
+    background-color: var(--success-green);
+    color: var(--white);
+    border-color: var(--success-green);
+    transform: scale(1.02);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.action-buttons {
+    display: flex;
+    justify-content: space-around;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.action-btn {
+    background-color: var(--border-light);
+    color: var(--text-dark);
+    padding: 12px 25px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Sevillana', cursive, 'Arial', sans-serif;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.action-btn:hover {
+    background-color: #D0D7DE;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.skip-btn {
+    background-color: var(--danger-red);
+    color: var(--white);
+}
+
+.skip-btn:hover {
+    background-color: #C0392B;
+}
+
+.next-btn {
+    background-color: var(--primary-blue);
+    color: var(--white);
+}
+
+.next-btn:hover {
+    background-color: var(--dark-blue);
+}
+
+.btn-icon {
+    margin-right: 8px;
+    font-size: 1.2rem;
+}
+
+/* Results Overlay */
+.results-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.98);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease-in-out;
+}
+
+.results-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.results-card {
+    background-color: var(--white);
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: var(--shadow);
+    text-align: center;
+    max-width: 500px;
+    width: 90%;
+    transform: translateY(20px);
+    opacity: 0;
+    animation: fadeInScale 0.6s ease-out forwards;
+}
+
+.results-card h2 {
+    font-size: 2rem;
+    color: var(--primary-blue);
+    margin-bottom: 20px;
+}
+
+#persona-summary {
+    text-align: left;
+    margin-bottom: 30px;
+    line-height: 1.8;
+    color: var(--text-dark);
+}
+
+#persona-summary strong {
+    color: var(--dark-blue);
+}
+
+.btn.animate-pop {
+    animation: popIn 0.5s ease forwards;
+}
+
+@keyframes fadeInScale {
+    from { opacity: 0; transform: scale(0.9) translateY(20px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes slideInDown {
+    from { opacity: 0; transform: translateY(-50px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes popIn {
+    0% { opacity: 0; transform: scale(0.8); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+
+    .reconator-container {
+        padding: 20px;
+        min-height: 90vh;
+    }
+
+    .reconator-header h1 {
+        font-size: 2rem;
+    }
+
+    .reconator-header p {
+        font-size: 1rem;
+    }
+
+    .question-card {
+        padding: 20px;
+    }
+
+    .question-text {
+        font-size: 1.1rem;
+    }
+
+    .option-btn, .action-btn {
+        padding: 10px 15px;
+        font-size: 0.9rem;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .btn-icon {
+        margin-right: 5px;
+        font-size: 1rem;
+    }
+
+    .results-card {
+        padding: 20px;
+    }
+
+    .results-card h2 {
+        font-size: 1.5rem;
+    }
+}

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reconator - Find Your Investor Persona</title>
+    <link rel="stylesheet" href="reconator.css">
+    <!-- Google Font for Sevillana (consistent with main app) -->
+    <link href="https://fonts.googleapis.com/css2?family=Sevillana&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="reconator-container">
+        <div class="reconator-header">
+            <h1>Reconator</h1>
+            <p id="reconator-subtitle">Discover your ideal investor match!</p>
+            <div class="progress-bar-container">
+                <div class="progress-bar-fill" id="progress-bar-fill"></div>
+            </div>
+            <p class="question-counter" id="question-counter">Question 1 of 5</p>
+        </div>
+
+        <div class="card-area">
+            <div class="question-card" id="question-card">
+                <p class="question-text" id="question-text">Loading question...</p>
+                <div class="options-container" id="options-container">
+                    <!-- Options will be dynamically loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="action-btn skip-btn" id="skip-btn">
+                <span class="btn-icon">⏭️</span> Skip
+            </button>
+            <button class="action-btn back-btn" id="back-btn" style="display: none;">
+                <span class="btn-icon">↩️</span> Back
+            </button>
+            <button class="action-btn next-btn" id="next-btn" style="display: none;">
+                <span class="btn-icon">➡️</span> Next
+            </button>
+        </div>
+
+        <div class="results-overlay" id="results-overlay" style="display: none;">
+            <div class="results-card">
+                <h2>Your Investor Persona</h2>
+                <div id="persona-summary">
+                    <!-- Persona summary will be populated here -->
+                </div>
+                <button class="btn btn-primary animate-pop" id="back-to-fundmatch">
+                    Back to FundMatch Dashboard
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="reconator.js"></script>
+</body>
+</html>
