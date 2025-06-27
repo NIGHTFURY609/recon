@@ -1,3 +1,4 @@
+
 // Configuration
 const API_BASE_URL = 'http://localhost:5000/api'; // This is a placeholder for your actual backend API
 
@@ -409,3 +410,4 @@ document.querySelectorAll('.form-input, .form-select').forEach(element => {
         }
     });
 });
+
