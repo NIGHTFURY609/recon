@@ -773,3 +773,33 @@ h1, h2, h3, .metric-value, .logo-icon {
         max-width: 95%; /* More width on small screens */
     }
 }
+.popup {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place even when scrolling */
+    left: 50%; /* Center horizontally */
+    top: 50%; /* Center vertically */
+    transform: translate(-50%, -50%); /* Adjust for exact centering */
+    background-color: #4CAF50; /* Green background */
+    color: white; /* White text */
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 1000; /* Ensure it's above other content */
+    font-family: Arial, sans-serif;
+    font-size: 1.2em;
+    text-align: center;
+}
+
+/* Optional: Basic button styling if you don't have it */
+.btn {
+    padding: 10px 20px;
+    font-size: 1em;
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}

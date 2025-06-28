@@ -205,6 +205,7 @@ function displayError(errorMessage) {
 /**
  * Populates the dashboard with mock data and animations.
  */
+
 function populateDashboard() {
     // Animate numbers
     animateNumber(totalMatchesElement, 0, 12, 1000);
@@ -496,6 +497,20 @@ function resetForm() {
 // Initial display on page load
 document.addEventListener('DOMContentLoaded', () => {
     showSection('dashboard-section'); // Show dashboard by default
+
+        const requestButton = document.getElementById('requestIntroBtn');
+    const popup = document.getElementById('popupMessage');
+
+    requestButton.addEventListener('click', function() {
+        // Show the popup
+        popup.style.display = 'block';
+
+        // Hide the popup after 3 seconds (3000 milliseconds)
+        setTimeout(function() {
+            popup.style.display = 'none';
+        }, 3000);
+    });
+    
 });
 
 // Event Listeners
