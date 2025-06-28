@@ -6,6 +6,7 @@ from datetime import datetime
 from bson.objectid import ObjectId 
 import os # Import the os module to access environment variables
 from dotenv import load_dotenv
+import requests
 
 load_dotenv()
 
@@ -113,6 +114,17 @@ else:
         client = None
         db = None
         messages_collection = None
+        
+# --- Gemini API Configuration ---
+# IMPORTANT: Get your Gemini API Key from Google AI Studio or Google Cloud Console
+# Store it securely in your .env file
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+
+if not GEMINI_API_KEY:
+    print("CRITICAL ERROR: GEMINI_API_KEY environment variable is not set.")
+    print("Please ensure GEMINI_API_KEY is defined in your .env file.")
+    # In a production app, you might want to raise an exception and stop startup
 
 def calculate_match_score(founder_profile, investor):
     """
@@ -226,6 +238,94 @@ def find_matches():
             "success": False,
             "error": f"Server error: {str(e)}"
         }), 500
+        
+        
+@app.route('/api/classify', methods=['POST'])
+def classify_questionnaire():
+    """
+    Receives questionnaire results and uses an AI (Gemini 2.0 Flash) to classify them.
+    Expected JSON payload:
+    {
+        "questionnaire_results": {
+            "question1": "answer1",
+            "question2": "answer2",
+            ...
+        },
+        "classification_goal": "e.g., 'Determine if this founder is high-risk or low-risk for investment.'"
+    }
+    """
+    if not GEMINI_API_KEY:
+        return jsonify({"success": False, "error": "AI service not configured. Missing API Key."}), 500
+
+    try:
+        data = request.get_json()
+        questionnaire_results = data.get('questionnaire_results')
+        classification_goal = data.get('classification_goal', "Classify the given questionnaire results.")
+
+        if not questionnaire_results:
+            return jsonify({"success": False, "error": "Missing 'questionnaire_results' in request."}), 400
+
+        # Construct a detailed prompt for the LLM
+        prompt_text = f"Based on the following questionnaire results, {classification_goal}:\n\n"
+        for question, answer in questionnaire_results.items():
+            prompt_text += f"- {question}: {answer}\n"
+
+        prompt_text += "\nProvide a concise classification or assessment based on the goal. "
+        prompt_text += "If a specific format is desired, please specify in 'classification_goal'."
+        prompt_text += "For example, if the goal is 'high-risk or low-risk', respond with 'High-Risk' or 'Low-Risk'."
+        prompt_text += "If the goal is to summarize, provide a brief summary."
+        prompt_text += "If the goal is to suggest next steps, provide concrete suggestions."
+
+
+        headers = {
+            'Content-Type': 'application/json'
+        }
+        payload = {
+            "contents": [
+                {
+                    "role": "user",
+                    "parts": [{"text": prompt_text}]
+                }
+            ],
+            "generationConfig": {
+                "temperature": 0.2, # Lower temperature for more deterministic/factual responses
+                "topK": 40,
+                "topP": 0.95,
+                "maxOutputTokens": 200 # Limit output length
+            }
+        }
+
+        # Make the API call to Gemini
+        gemini_response = requests.post(
+            f"{GEMINI_API_URL}?key={GEMINI_API_KEY}",
+            headers=headers,
+            json=payload
+        )
+        gemini_response.raise_for_status() # Raise an HTTPError for bad responses (4xx or 5xx)
+
+        gemini_result = gemini_response.json()
+
+        # Extract the generated text
+        if gemini_result and gemini_result.get('candidates') and \
+           gemini_result['candidates'][0].get('content') and \
+           gemini_result['candidates'][0]['content'].get('parts'):
+            classification_text = gemini_result['candidates'][0]['content']['parts'][0]['text']
+            return jsonify({
+                "success": True,
+                "classification": classification_text,
+                "raw_ai_response": gemini_result # Include raw response for debugging
+            }), 200
+        else:
+            print(f"Unexpected Gemini API response structure: {gemini_result}")
+            return jsonify({"success": False, "error": "AI returned an unexpected response format."}), 500
+
+    except requests.exceptions.RequestException as req_err:
+        print(f"Error communicating with Gemini API: {req_err}")
+        return jsonify({"success": False, "error": f"Failed to connect to AI service: {str(req_err)}"}), 500
+    except Exception as e:
+        print(f"Server error during AI classification: {e}")
+        return jsonify({"success": False, "error": f"Internal server error during classification: {str(e)}"}), 500
+
 
 @app.route('/api/investors/<int:investor_id>')
 def get_investor_details(investor_id):
@@ -377,14 +477,5 @@ def get_platform_stats():
     
 
 if __name__ == '__main__':
-    print("🚀 Starting Startup Investor Matching Platform API...")
-    print("📊 Dashboard: http://localhost:5000")
-    print("🔍 API Endpoints:")
-    print("   GET  /api/investors - List all investors")
-    print("   POST /api/match - Find investor matches")
-    print("   GET  /api/investors/<id> - Get investor details")
-    print("   GET  /api/industries - List industries")
-    print("   GET  /api/funding-stages - List funding stages")
-    print("   GET  /api/stats - Platform statistics")
-    
+
     app.run(debug=True, host='0.0.0.0', port=5000)
