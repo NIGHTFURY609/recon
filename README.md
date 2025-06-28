@@ -26,8 +26,8 @@ A full-stack web application that matches startup founders with potential invest
 
 1. **Clone/Download the files**
    ```bash
-   mkdir startup-investor-platform
-   cd startup-investor-platform
+   mkdir recon
+   cd recon
    ```
 
 2. **Save the files**
