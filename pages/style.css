@@ -21,6 +21,7 @@
     --sidebar-width: 250px; /* Define sidebar width */
     --sidebar-bg: #f0f4f8; /* Light background for sidebar */
     --sidebar-border: #e0e0e0; /* Border for sidebar */
+    --doodle-background: url('222.jpg'); /* Added: Variable for the new doodle image */
 }
 
 body {
@@ -177,6 +178,15 @@ h1, h2, h3 {
     padding: 30px;
     border-radius: 12px;
     box-shadow: var(--shadow-soft);
+    
+    /* --- Added: Background image for the inner content wrapper --- */
+    background-image: var(--doodle-background); /* Use the defined doodle image */
+    background-repeat: repeat; /* Tile the image to fill the space */
+    background-size: auto; /* Maintain original resolution of each tile */
+    background-position: center; /* Center the first tile, then repeat */
+    background-color: rgba(255, 255, 255, 0.85); /* Semi-transparent white overlay for readability */
+    background-blend-mode: overlay; /* Blend the background image with the color */
+    color: var(--text-dark); /* Ensure text color is readable */
 }
 
 .question-card.active {

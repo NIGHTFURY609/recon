@@ -18,8 +18,9 @@
     --bg-image-1: url('image 1.jpg'); /* Blue/purple gradient with hexagons */
     --bg-image-2: url('image 2.jpg'); /* Blue with rocket outline */
     --bg-image-3: url('image 3.avif'); /* Paper plane with icons */
-    --bg-image-4: url('image  4.jpg'); /* Startup illustration */
+    --bg-image-4: url('image 4.jpg'); /* Startup illustration */
     --bg-image-5: url('image 5.png'); /* START UP word art */
+    --doodle-background: url('9917134.jpg'); /* ADDED: Your doodle image variable */
 }
 
 body {
@@ -115,7 +116,7 @@ h1, h2, h3, .metric-value, .logo-icon {
     flex: 1;
     padding: 2rem;
     position: relative; /* For absolute positioning of sections */
-     /* Hide overflowing content during transitions */
+    /* Hide overflowing content during transitions */
 }
 
 .header {
@@ -149,34 +150,36 @@ h1, h2, h3, .metric-value, .logo-icon {
 }
 
 /* Specific backgrounds for sections */
+/*
 #dashboard-section .step-card {
-    background-image: var(--bg-image-4); /* Startup illustration */
+    background-image: var(--bg-image-4); /* Startup illustration
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    color: #333; /* Adjust text color for readability */
+    color: #333; /* Adjust text color for readability
 }
 
 #profile-step .step-card {
-    background-image: var(--bg-image-5); /* START UP word art */
+    background-image: var(--bg-image-5); /* START UP word art
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    color: #333; /* Adjust text color for readability */
+    color: #333; /* Adjust text color for readability
 }
 
 #matches-overview-section .step-card {
-    background-image: var(--bg-image-3); /* Paper plane with icons */
+    background-image: var(--bg-image-3); /* Paper plane with icons
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    color: #333; /* Adjust text color for readability */
+    color: #333; /* Adjust text color for readability
 }
 
 #messages-section .step-card {
-    background-image: none; /* No specific image, keep it clean */
+    background-image: none; /* No specific image, keep it clean
     background-color: var(--white);
 }
+*/
 
 
 /* Fade-in animation */
@@ -202,6 +205,18 @@ h1, h2, h3, .metric-value, .logo-icon {
     box-shadow: var(--shadow);
     border: 1px solid var(--border-light);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+    /* --- ADDED FOR YOUR DOODLE IMAGE --- */
+    background-image: var(--doodle-background); /* Use the new variable */
+    background-repeat: repeat; /* Tile the image */
+    background-size: auto; /* Or set a specific size, e.g., 150px 150px; for smaller tiles */
+    background-position: center; /* Center the first tile, then repeat */
+    /* To ensure text readability over the doodle: */
+    background-color: rgba(255, 255, 255, 0.85); /* Semi-transparent white overlay */
+    background-blend-mode: overlay; /* Blend the background image with the color */
+    color: var(--text-dark); /* Ensure text color is still readable */
+    /* If the doodle is still too strong, you might try: */
+    /* opacity: 0.9; */ /* or target specific background-image opacity in some browsers */
 }
 
 .step-card:hover {
