@@ -94,16 +94,7 @@ The scoring system awards points based on alignment:
 
 **Maximum Score: 7 points**
 
-## 📊 Sample Data
 
-The platform includes 6 hardcoded investor profiles:
-
-1. **TechVentures Capital** - FinTech/SaaS/AI, Seed/Series A
-2. **HealthFirst Partners** - HealthTech/AI, Pre-seed/Seed
-3. **Growth Equity Solutions** - SaaS/E-commerce/FinTech, Series A/B
-4. **Innovation Labs Fund** - AI/Blockchain/IoT, Pre-seed/Seed
-5. **Education Forward VC** - EdTech/SaaS, Seed/Series A
-6. **Commerce Accelerator** - E-commerce/SaaS/FinTech, Pre-seed to Series A
 
 ## 🎨 Frontend Features
 
@@ -124,18 +115,8 @@ For production deployment:
 4. **Authentication** - User management system
 5. **Database** - Replace in-memory data with persistent storage
 
-## 📈 Scaling Considerations
 
-### Database Integration
-```python
-# Example SQLAlchemy model
-class Investor(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    industries = db.Column(db.JSON)
-    stages = db.Column(db.JSON)
-    # ... other fields
-```
+
 
 ### Advanced Features
 - **Real-time matching** with WebSocket connections
@@ -144,19 +125,8 @@ class Investor(db.Model):
 - **Messaging system** between founders and investors
 - **Analytics dashboard** for platform insights
 
-## 🐛 Troubleshooting
 
-**CORS Issues:**
-- Ensure Flask-CORS is installed and configured
-- Check browser console for CORS errors
 
-**Port Conflicts:**
-- Change Flask port: `app.run(port=5001)`
-- Update API URLs in frontend accordingly
-
-**Module Not Found:**
-- Ensure all dependencies are installed: `pip install -r requirements.txt`
-- Check Python version compatibility
 
 ## 🚢 Deployment Options
 
@@ -182,7 +152,7 @@ CMD ["python", "app.py"]
 
 ## 📝 Next Steps
 
-1. **Add database integration** (PostgreSQL/MongoDB)
+1. **Add database integration** (MongoDB)
 2. **Implement user authentication** (JWT tokens)
 3. **Add email notifications** for matches
 4. **Create admin dashboard** for investor management
