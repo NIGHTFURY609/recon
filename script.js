@@ -219,10 +219,10 @@ function populateDashboard() {
 
     // Populate recent activities with staggered animation
     const activities = [
-        { icon: '🤝', text: 'Matched with **"Venture Capital X"** for your SaaS startup.', time: '2 hours ago' },
-        { icon: '📝', text: 'Your profile for **"InnovateCo"** was updated.', time: '1 day ago' },
-        { icon: '📅', text: 'Meeting scheduled with **"Angel Investor Group"** on July 5th.', time: '3 days ago' },
-        { icon: '🚀', text: 'New investor **"Growth Equity Fund"** added to the platform.', time: '5 days ago' }
+        { icon: '🤝', text: 'Matched with Venture Capital X for your SaaS startup.', time: '2 hours ago' },
+        { icon: '📝', text: 'Your profile for InnovateCo was updated.', time: '1 day ago' },
+        { icon: '📅', text: 'Meeting scheduled with Angel Investor Group on July 5th.', time: '3 days ago' },
+        { icon: '🚀', text: 'New investor Growth Equity Fund added to the platform.', time: '5 days ago' }
     ];
 
     activityListElement.innerHTML = ''; // Clear placeholders

@@ -26,14 +26,14 @@ messages_collection = None
 INVESTORS = [
     {
         "id": 1,
-        "name": "TechVentures Capital",
+        "name": "FAITH INFOTECH ACADEMY",
         "industries": ["fintech", "saas", "ai"],
         "stages": ["seed", "series-a"],
         "risk_tolerance": "high",
         "investment_range": [100000, 5000000],
         "description": "Early-stage tech investor focused on disruptive technologies",
-        "contact": "partners@techventures.com",
-        "location": "San Francisco, CA"
+        "contact": "https://faithinfotechacademy.com/",
+        "location": "INFOPARK, KOCHIN, KERALA"
     },
     {
         "id": 2,
