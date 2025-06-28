@@ -322,94 +322,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 400); // Allow exit animation to play
     }
 
-async function showResults() {
-    const answeredQuestionsCount = Object.keys(userAnswers).filter(key => userAnswers[key] !== undefined && userAnswers[key] !== null).length;
-
-    if (answeredQuestionsCount < MIN_QUESTIONS_FOR_MATCH) {
-        showMessageModal(`Please answer at least ${MIN_QUESTIONS_FOR_MATCH} questions to see your match.`);
-        return;
-    }
-
-    // Show a loading state while waiting for the AI
-    personaSummary.innerHTML = `
-        <p>Analyzing your responses and consulting the AI...</p>
-        <div class="loading-spinner"></div>
-    `;
-    // Optionally, you can show the overlay here to make sure the loading spinner is visible immediately
-    reconatorContainer.querySelector('.main-quiz-content').style.display = 'none';
-    reconatorContainer.querySelector('.quiz-sidebar').style.display = 'none';
-    reconatorContainer.style.justifyContent = 'center';
-    resultsOverlay.style.display = 'flex';
-    resultsOverlay.classList.add('active');
-
-
-    try {
-        const response = await fetch('/api/classify', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                questionnaire_results: userAnswers,
-                // Define your classification goal clearly for the AI
-                classification_goal: "Determine the investor persona (e.g., Aggressive, Moderate, Conservative) based on the user's answers and provide a brief description of this persona, along with specific, actionable suggestions for investment strategies or next steps tailored to this persona. Structure the response as: 'Persona: [Name]\nDescription: [Brief Description]\nSuggestions: [Numbered list of suggestions]'"
-            }),
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(`Server error: ${response.status} - ${errorData.error || 'Unknown error'}`);
+    function showResults() {
+        const answeredQuestionsCount = Object.keys(userAnswers).filter(key => userAnswers[key] !== undefined && userAnswers[key] !== null).length;
+        if (answeredQuestionsCount < MIN_QUESTIONS_FOR_MATCH) {
+            showMessageModal(`Please answer at least ${MIN_QUESTIONS_FOR_MATCH} questions to see your match.`);
+            return;
         }
 
-        const data = await response.json();
-
-        if (data.success) {
-            const classificationText = data.classification;
-
-            // Parse the AI's response based on the structured prompt
-            let personaName = 'Unknown Persona';
-            let personaDescription = 'Could not determine a clear persona based on the AI response.';
-            let personaSuggestions = [];
-
-            const lines = classificationText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
-
-            let currentSection = '';
-            lines.forEach(line => {
-                if (line.startsWith('Persona:')) {
-                    personaName = line.substring('Persona:'.length).trim();
-                    currentSection = 'persona';
-                } else if (line.startsWith('Description:')) {
-                    personaDescription = line.substring('Description:'.length).trim();
-                    currentSection = 'description';
-                } else if (line.startsWith('Suggestions:')) {
-                    currentSection = 'suggestions';
-                } else if (currentSection === 'suggestions' && line.match(/^\d+\./)) { // Check for numbered list
-                    personaSuggestions.push(line);
-                } else if (currentSection === 'description' && !line.match(/^\d+\./) && !line.startsWith('Persona:') && !line.startsWith('Description:')) {
-                    // Append to description if it's a continuation
-                    personaDescription += ' ' + line;
-                }
-            });
-
-
-            personaSummary.innerHTML = `
-                <p>Based on your responses, your investor persona is: <strong>${personaName}</strong>!</p>
-                <p>${personaDescription}</p>
-                ${personaSuggestions.length > 0 ? `<p><strong>Suggestions:</strong></p><ul>${personaSuggestions.map(s => `<li>${s}</li>`).join('')}</ul>` : ''}
-                <button class="btn btn-primary mt-3" onclick="startNewQuiz()">Retake Quiz</button>
-            `;
-            // Add a retake quiz button or other actions here
-        } else {
-            showMessageModal(`Error classifying your responses: ${data.error}`);
-            personaSummary.innerHTML = `<p>There was an error processing your results. Please try again.</p>`;
-        }
-
-    } catch (error) {
-        console.error('Error:', error);
-        showMessageModal(`An unexpected error occurred: ${error.message}. Please try again.`);
-        personaSummary.innerHTML = `<p>An unexpected error occurred. Please try again later.</p>`;
+        // Placeholder for actual persona matching logic
+        // In a real application, you'd send userAnswers to a backend or run a more complex algorithm here.
+        const persona = analyzeAnswers(userAnswers);
+        personaSummary.innerHTML = `
+            <p>Based on your responses, your investor persona is: <strong>${persona.name}</strong>!</p>
+            <p>${persona.description}</p>
+            ${persona.details ? `<p><strong>Key Preferences:</strong></p><ul>${persona.details.map(d => `<li>${d}</li>`).join('')}</ul>` : ''}
+        `;
+        reconatorContainer.querySelector('.main-quiz-content').style.display = 'none';
+        reconatorContainer.querySelector('.quiz-sidebar').style.display = 'none';
+        reconatorContainer.style.justifyContent = 'center'; // Center the results card
+        resultsOverlay.style.display = 'flex';
+        resultsOverlay.classList.add('active');
     }
-}
+
 
 
     function analyzeAnswers(answers) {
