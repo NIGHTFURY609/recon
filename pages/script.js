@@ -1,3 +1,7 @@
+
+
+
+
 document.addEventListener('DOMContentLoaded', () => {
     // --- DOM Element References ---
     const reconatorContainer = document.querySelector('.reconator-container');
@@ -15,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const minQuestionsMessage = document.getElementById('min-questions-message');
     const actionButtonsContainer = document.getElementById('action-buttons');
     const sidebarQuestionList = document.getElementById('sidebar-question-list');
+    
     // --- State Variables ---
     let currentQuestionIndex = 0;
     let userAnswers = {}; // Stores answers in { questionId: selectedValue } format
@@ -322,7 +327,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 400); // Allow exit animation to play
     }
 
-    function showResults() {
+
+
+        // This function now *prepares* the answers for the AI, rather than analyzing them itself.
+    // It translates question IDs and selected values into human-readable strings.
+    function prepareAnswersForAI(answers) {
+        const formattedAnswers = {};
+        for (const qId in answers) {
+            const question = questions.find(q => q.id === qId);
+            if (question) {
+                const selectedOption = question.options.find(opt => opt.value === answers[qId]);
+                if (selectedOption) {
+                    // Use the question text and the selected option's text
+                    formattedAnswers[question.question] = selectedOption.text;
+                }
+            }
+        }
+        return formattedAnswers;
+    }
+
+
+    async function showResults() {
         const answeredQuestionsCount = Object.keys(userAnswers).filter(key => userAnswers[key] !== undefined && userAnswers[key] !== null).length;
         if (answeredQuestionsCount < MIN_QUESTIONS_FOR_MATCH) {
             showMessageModal(`Please answer at least ${MIN_QUESTIONS_FOR_MATCH} questions to see your match.`);
@@ -331,13 +356,72 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Placeholder for actual persona matching logic
         // In a real application, you'd send userAnswers to a backend or run a more complex algorithm here.
-        const persona = analyzeAnswers(userAnswers);
-        personaSummary.innerHTML = `
-            <p>Based on your responses, your investor persona is: <strong>${persona.name}</strong>!</p>
-            <p>${persona.description}</p>
-            ${persona.details ? `<p><strong>Key Preferences:</strong></p><ul>${persona.details.map(d => `<li>${d}</li>`).join('')}</ul>` : ''}
-        `;
-        reconatorContainer.querySelector('.main-quiz-content').style.display = 'none';
+        
+         // Assuming you have an element with this ID to display results
+        personaSummary.innerHTML = '<p>Analyzing your responses and generating your investor persona...</p>';
+
+        try {
+            const formattedUserAnswers = prepareAnswersForAI(userAnswers);
+
+            const response = await fetch('http://127.0.0.1:5000/api/classify', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    questionnaire_results: formattedUserAnswers,
+                    classification_goal: "Generate an investor persona name and a brief description (2-3 sentences) for a startup founder based on their questionnaire responses. Also, list 3-5 key preferences or characteristics of this founder. The output should be in a JSON format with 'name', 'description', and 'details' (an array of strings) keys. For example: {'name': 'Ambitious Seed Seeker', 'description': 'This founder is leading an early-stage fintech startup aiming for rapid growth and is comfortable with some investor guidance.', 'details': ['Seeking Seed funding', 'Fintech industry focus', 'Comfortable with medium investor involvement']}"
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+        if (data.success) {
+            let classificationText = data.classification;
+
+            // --- FIX START ---
+            // Remove the Markdown code block wrappers if they exist
+            if (classificationText.startsWith('```json')) {
+                classificationText = classificationText.substring(7); // Remove '```json'
+            }
+            if (classificationText.endsWith('```')) {
+                classificationText = classificationText.slice(0, -3); // Remove '```'
+            }
+            // Trim any leading/trailing whitespace that might remain
+            classificationText = classificationText.trim();
+            // --- FIX END ---
+
+            let persona;
+            try {
+                // Attempt to parse the AI's response as JSON
+                persona = JSON.parse(classificationText);
+            } catch (parseError) {
+                console.error("Failed to parse AI response as JSON:", parseError);
+                // Fallback if AI doesn't return perfect JSON even after stripping
+                persona = {
+                    name: "Unclassified Persona (Parsing Error)",
+                    description: "The AI returned an unparsable response. Raw output: " + classificationText,
+                    details: ["Please check the console for the full error."]
+                };
+            }
+
+                personaSummary.innerHTML = `
+                    <p>Based on your responses, your investor persona is: <strong>${persona.name}</strong>!</p>
+                    <p>${persona.description}</p>
+                    ${persona.details && persona.details.length > 0 ? `<p><strong>Key Preferences:</strong></p><ul>${persona.details.map(d => `<li>${d}</li>`).join('')}</ul>` : ''}
+                `;
+            } else {
+                personaSummary.innerHTML = `<p>Error: ${data.error}</p>`;
+            }
+        } catch (error) {
+            console.error('There was a problem with the fetch operation:', error);
+            personaSummary.innerHTML = `<p>Failed to get investor persona. Please try again later. Error: ${error.message}</p>`;
+        }
+                reconatorContainer.querySelector('.main-quiz-content').style.display = 'none';
         reconatorContainer.querySelector('.quiz-sidebar').style.display = 'none';
         reconatorContainer.style.justifyContent = 'center'; // Center the results card
         resultsOverlay.style.display = 'flex';
@@ -346,40 +430,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-    function analyzeAnswers(answers) {
-        // This is a simplified example. A real analysis would be more robust.
-        let preferences = {};
-        for (const qId in answers) {
-            const question = questions.find(q => q.id === qId);
-            if (question) {
-                const selectedOption = question.options.find(opt => opt.value === answers[qId]);
-                if (selectedOption && selectedOption.preference) {
-                    Object.assign(preferences, selectedOption.preference);
-                }
-            }
-        }
-
-        const persona = {
-            name: "Adaptive Entrepreneur",
-            description: "You're flexible and open to various investor types, valuing both capital and strategic input.",
-            details: []
-        };
-        if (preferences.fundingStage) {
-            persona.details.push(`Funding Stage Focus: ${preferences.fundingStage}`);
-        }
-        if (preferences.industry) {
-            persona.details.push(`Preferred Industry: ${preferences.industry}`);
-        }
-        if (preferences.investorInvolvement) {
-            persona.details.push(`Investor Involvement: ${preferences.investorInvolvement}`);
-        }
-        if (preferences.riskTolerance) {
-            persona.details.push(`Risk Tolerance: ${preferences.riskTolerance}`);
-        }
-        // Add more details based on other preferences
-
-        return persona;
-    }
+    
 
     function populateSidebar() {
         sidebarQuestionList.innerHTML = ''; // Clear existing items

@@ -1,12 +1,14 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import json
+import redis 
 from pymongo import MongoClient
 from datetime import datetime
 from bson.objectid import ObjectId 
 import os # Import the os module to access environment variables
 from dotenv import load_dotenv
 import requests
+
 
 load_dotenv()
 
@@ -173,7 +175,7 @@ def index():
     return jsonify({
         "status": "running",
         "message": "Startup Investor Matching API",
-        "version": "1.0.0"
+        "version": "2.0.0"
     })
 
 @app.route('/api/investors')
@@ -247,8 +249,8 @@ def classify_questionnaire():
     Expected JSON payload:
     {
         "questionnaire_results": {
-            "question1": "answer1",
-            "question2": "answer2",
+            "Question text 1": "Answer text 1",
+            "Question text 2": "Answer text 2",
             ...
         },
         "classification_goal": "e.g., 'Determine if this founder is high-risk or low-risk for investment.'"
@@ -270,11 +272,9 @@ def classify_questionnaire():
         for question, answer in questionnaire_results.items():
             prompt_text += f"- {question}: {answer}\n"
 
-        prompt_text += "\nProvide a concise classification or assessment based on the goal. "
-        prompt_text += "If a specific format is desired, please specify in 'classification_goal'."
-        prompt_text += "For example, if the goal is 'high-risk or low-risk', respond with 'High-Risk' or 'Low-Risk'."
-        prompt_text += "If the goal is to summarize, provide a brief summary."
-        prompt_text += "If the goal is to suggest next steps, provide concrete suggestions."
+        prompt_text += "\n"
+        # Crucial addition: Explicitly ask for JSON output for the persona
+        prompt_text += "Your output MUST be a JSON object with the following keys: 'name' (string), 'description' (string, 2-3 sentences), and 'details' (an array of 3-5 strings representing key preferences or characteristics). Do not include any other text or formatting outside of the JSON object. Example: {'name': 'Ambitious Seed Seeker', 'description': 'This founder is leading an early-stage fintech startup aiming for rapid growth and is comfortable with some investor guidance.', 'details': ['Seeking Seed funding', 'Fintech industry focus', 'Comfortable with medium investor involvement']}"
 
 
         headers = {
@@ -288,10 +288,10 @@ def classify_questionnaire():
                 }
             ],
             "generationConfig": {
-                "temperature": 0.2, # Lower temperature for more deterministic/factual responses
+                "temperature": 0.4, # Slightly increased temperature to allow for more creative persona generation, but still controlled.
                 "topK": 40,
                 "topP": 0.95,
-                "maxOutputTokens": 200 # Limit output length
+                "maxOutputTokens": 300 # Increased max output tokens to accommodate more detailed persona description and details array.
             }
         }
 
@@ -312,19 +312,20 @@ def classify_questionnaire():
             classification_text = gemini_result['candidates'][0]['content']['parts'][0]['text']
             return jsonify({
                 "success": True,
-                "classification": classification_text,
+                "classification": classification_text, # This should be the JSON string from Gemini
                 "raw_ai_response": gemini_result # Include raw response for debugging
             }), 200
         else:
             print(f"Unexpected Gemini API response structure: {gemini_result}")
             return jsonify({"success": False, "error": "AI returned an unexpected response format."}), 500
 
-    except requests.exceptions.RequestException as req_err:
-        print(f"Error communicating with Gemini API: {req_err}")
-        return jsonify({"success": False, "error": f"Failed to connect to AI service: {str(req_err)}"}), 500
+    except requests.exceptions.RequestException as e:
+        print(f"Error calling Gemini API: {e}")
+        return jsonify({"success": False, "error": f"Failed to connect to AI service: {e}"}), 500
     except Exception as e:
-        print(f"Server error during AI classification: {e}")
-        return jsonify({"success": False, "error": f"Internal server error during classification: {str(e)}"}), 500
+        print(f"An unexpected error occurred: {e}")
+        return jsonify({"success": False, "error": f"An internal server error occurred: {e}"}), 500
+
 
 
 @app.route('/api/investors/<int:investor_id>')
