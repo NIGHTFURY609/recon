@@ -429,9 +429,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-
-    
-
     function populateSidebar() {
         sidebarQuestionList.innerHTML = ''; // Clear existing items
         questions.forEach((q, index) => {

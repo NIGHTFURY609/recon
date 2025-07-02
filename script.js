@@ -1,5 +1,5 @@
 // Configuration
-const API_BASE_URL = 'http://localhost:5000'; // This is a placeholder for your actual backend API
+const API_BASE_URL = 'https://recon-xh9b.onrender.com'; // This is a placeholder for your actual backend API
 
 // DOM Elements
 const dashboardSection = document.getElementById('dashboard-section');
@@ -493,6 +493,7 @@ function resetForm() {
     });
     showSection('profile-step'); // Go back to the profile form
 }
+
 
 // Initial display on page load
 document.addEventListener('DOMContentLoaded', () => {

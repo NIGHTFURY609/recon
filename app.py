@@ -24,6 +24,25 @@ db = None
 messages_collection = None
 
 
+# --- Redis Configuration ---
+# It's highly recommended to use environment variables for production
+REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
+REDIS_PORT = int(os.environ.get('REDIS_PORT', 6379))
+REDIS_DB = int(os.environ.get('REDIS_DB', 0))
+REDIS_TTL_SECONDS = 5 * 60  # 5 minutes TTL
+
+# Initialize Redis client
+try:
+    redis_client = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, decode_responses=True)
+    # Test connection
+    redis_client.ping()
+    print(f"Successfully connected to Redis at {REDIS_HOST}:{REDIS_PORT}")
+except redis.exceptions.ConnectionError as e:
+    redis_client = None
+    print(f"Could not connect to Redis: {e}. Caching will be disabled.")
+    
+    
+    
 # Hard-coded investor profiles
 INVESTORS = [
     {
@@ -190,7 +209,7 @@ def get_investors():
 @app.route('/api/match', methods=['POST'])
 def find_matches():
     """
-    Find investor matches for a founder profile
+    Find investor matches for a founder profile, with Redis caching.
     Expected JSON payload:
     {
         "industry": "fintech",
@@ -202,40 +221,69 @@ def find_matches():
     """
     try:
         founder_profile = request.get_json()
-        
+
         # Validate required fields
         required_fields = ['industry', 'funding_stage', 'risk_tolerance', 'investment_amount']
         missing_fields = [field for field in required_fields if not founder_profile.get(field)]
-        
+
         if missing_fields:
             return jsonify({
                 "success": False,
                 "error": f"Missing required fields: {', '.join(missing_fields)}"
             }), 400
-        
-        # Calculate matches for all investors
+
+        # Create a cache key from the founder profile.
+        # Ensure consistent ordering of keys for consistent hashing.
+        cache_key_data = {k: founder_profile.get(k) for k in sorted(founder_profile.keys())}
+        cache_key = f"match:{json.dumps(cache_key_data, sort_keys=True)}"
+
+        # --- Try to retrieve from cache ---
+        if redis_client:
+            try:
+                cached_response = redis_client.get(cache_key)
+                if cached_response:
+                    print(f"Cache HIT for key: {cache_key}")
+                    return jsonify(json.loads(cached_response))
+            except redis.exceptions.RedisError as e:
+                print(f"Redis GET error: {e}. Proceeding without cache.")
+        else:
+            print("Redis client not available. Skipping cache lookup.")
+
+        # --- If not in cache, calculate matches ---
+        print(f"Cache MISS for key: {cache_key}. Calculating matches...")
         matches = []
         for investor in INVESTORS:
             match_result = calculate_match_score(founder_profile, investor)
             if match_result["score"] > 0:  # Only include investors with some match
                 matches.append(match_result)
-        
+
         # Sort by score (highest first) and take top 3
         matches.sort(key=lambda x: x["score"], reverse=True)
         top_matches = matches[:3]
-        
+
         # Prepare response
         response_data = {
             "success": True,
             "founder_profile": founder_profile,
             "matches": top_matches,
             "total_matches": len(matches),
-            
         }
-        
+
+        # --- Store in cache ---
+        if redis_client:
+            try:
+                # Store the JSON string with a TTL
+                redis_client.setex(cache_key, REDIS_TTL_SECONDS, json.dumps(response_data))
+                print(f"Response cached for key: {cache_key} with TTL: {REDIS_TTL_SECONDS} seconds.")
+            except redis.exceptions.RedisError as e:
+                print(f"Redis SETEX error: {e}. Response not cached.")
+
         return jsonify(response_data)
-        
+
     except Exception as e:
+        # Log the full traceback for debugging in a real application
+        import traceback
+        traceback.print_exc()
         return jsonify({
             "success": False,
             "error": f"Server error: {str(e)}"
@@ -327,6 +375,17 @@ def classify_questionnaire():
         return jsonify({"success": False, "error": f"An internal server error occurred: {e}"}), 500
 
 
+@app.route('/api/matches_overview', methods=['GET'])
+def get_matches_overview():
+    cache_key = "investor_matches_overview" # A static key for now. Consider dynamic keys if data is user-specific.
+
+    # 1. Try to pull from Redis first
+    if redis_client:
+        cached_data = redis_client.get(cache_key)
+        if cached_data:
+            print("Pulled data from Redis (cache hit).")
+            # The data stored in Redis is a JSON string, so parse it back to a Python dict
+            return jsonify(json.loads(cached_data))
 
 @app.route('/api/investors/<int:investor_id>')
 def get_investor_details(investor_id):
@@ -451,30 +510,7 @@ def send_message():
         }), 500
 
 
-@app.route('/api/stats')
-def get_platform_stats():
-    """Get platform statistics"""
-    # Calculate some basic stats from our investor data
-    total_investors = len(INVESTORS)
-    industries_covered = len(set(industry for investor in INVESTORS for industry in investor['industries']))
-    avg_investment_min = sum(inv['investment_range'][0] for inv in INVESTORS) // total_investors
-    avg_investment_max = sum(inv['investment_range'][1] for inv in INVESTORS) // total_investors
-    
-    return jsonify({
-        "success": True,
-        "stats": {
-            "total_investors": total_investors,
-            "industries_covered": industries_covered,
-            "average_min_investment": avg_investment_min,
-            "average_max_investment": avg_investment_max,
-            "risk_tolerance_distribution": {
-                "high": len([inv for inv in INVESTORS if inv['risk_tolerance'] == 'high']),
-                "medium": len([inv for inv in INVESTORS if inv['risk_tolerance'] == 'medium']),
-                "low": len([inv for inv in INVESTORS if inv['risk_tolerance'] == 'low'])
-            }
-        }
-    })
-    
+
     
 
 if __name__ == '__main__':
