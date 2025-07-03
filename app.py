@@ -29,17 +29,36 @@ messages_collection = None
 REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
 REDIS_PORT = int(os.environ.get('REDIS_PORT', 6379))
 REDIS_DB = int(os.environ.get('REDIS_DB', 0))
-REDIS_TTL_SECONDS = 5 * 60  # 5 minutes TTL
+# Get Redis password from an environment variable for security
+REDIS_PASSWORD = os.environ.get('REDIS_PASSWORD') 
+ # Use SSL/TLS for secure connections
+REDIS_TTL_SECONDS = 5 * 60 # 5 minutes TTL
 
-# Initialize Redis client
+# ---
+## Initialize Redis Client
+redis_client = None
 try:
-    redis_client = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, decode_responses=True)
+    # Initialize Redis client with password, timeout, and SSL options
+    redis_client = redis.StrictRedis(
+        host=REDIS_HOST,
+        port=REDIS_PORT,
+        db=REDIS_DB,
+        password=REDIS_PASSWORD,
+        decode_responses=True,# Optional: For specific SSL configurations
+    )
     # Test connection
     redis_client.ping()
-    print(f"Successfully connected to Redis at {REDIS_HOST}:{REDIS_PORT}")
+    print(f"Successfully connected to Redis at {REDIS_HOST}:{REDIS_PORT}, DB:{REDIS_DB}")
 except redis.exceptions.ConnectionError as e:
     redis_client = None
     print(f"Could not connect to Redis: {e}. Caching will be disabled.")
+except redis.exceptions.AuthenticationError as e:
+    redis_client = None
+    print(f"Redis authentication failed: {e}. Check your password.")
+except Exception as e:
+    redis_client = None
+    print(f"An unexpected error occurred while connecting to Redis: {e}. Caching will be disabled.")
+
     
     
     
