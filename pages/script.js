@@ -1,5 +1,7 @@
 
 
+ API_BASE_URL = "https://recon-xh9b.onrender.com"; // This comes from your Flask backend
+
 
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -362,8 +364,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const formattedUserAnswers = prepareAnswersForAI(userAnswers);
-
-            const response = await fetch('http://127.0.0.1:5000/api/classify', {
+            const endpoint = '/api/classify'
+            const url = `${API_BASE_URL}${endpoint}`;
+            const response = await fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

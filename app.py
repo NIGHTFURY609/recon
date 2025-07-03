@@ -60,7 +60,7 @@ except Exception as e:
     print(f"An unexpected error occurred while connecting to Redis: {e}. Caching will be disabled.")
 
     
-    
+API_BASE_URL = os.environ.get('API_BASE_URL', 'http://localhost:5000')
     
 # Hard-coded investor profiles
 INVESTORS = [
