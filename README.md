@@ -133,11 +133,6 @@ For production deployment:
 ### Local Development
 - Use the setup instructions above
 
-### Cloud Deployment
-- **Heroku**: Add `Procfile` with `web: python app.py`
-- **AWS EC2**: Use systemd service for process management
-- **Google Cloud Run**: Containerize with Docker
-- **DigitalOcean App Platform**: Direct GitHub deployment
 
 ### Docker Setup
 ```dockerfile
