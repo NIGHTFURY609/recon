@@ -17,7 +17,7 @@ import requests
 load_dotenv()
 
 
-CREDENTIALS_FILE = 'recon-credentials.json'
+CREDENTIALS_FILE = './recon-credentials.json'
 WORKSHEET_NAME = 'Form Responses 1'  # Replace with your actual Google Sheet worksheet name
 SHEET_ID = '1xyXqg9acHlxFbAzz4oEAdx7c41i5_mtoVBocAnQdqCU'  # Replace with your actual Google Sheet ID
 
