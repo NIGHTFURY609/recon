@@ -6,5 +6,8 @@ requests==2.32.3
 python-dotenv==1.0.1
 gunicorn==22.0.0
 redis==5.0.1
-google.oauth2
+gspread
+google-auth
+google-auth-oauthlib
+google-api-python-client
 gspread
