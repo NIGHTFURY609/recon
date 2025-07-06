@@ -1,16 +1,26 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, render_template,jsonify
 from flask_cors import CORS
 import json
 import redis 
 from pymongo import MongoClient
 from datetime import datetime
 from bson.objectid import ObjectId 
+import gspread
+from google.oauth2 import service_account
 import os # Import the os module to access environment variables
 from dotenv import load_dotenv
 import requests
 
 
+
+
 load_dotenv()
+
+
+CREDENTIALS_FILE = 'recon-credentials.json'
+WORKSHEET_NAME = 'Form Responses 1'  # Replace with your actual Google Sheet worksheet name
+SHEET_ID = '1xyXqg9acHlxFbAzz4oEAdx7c41i5_mtoVBocAnQdqCU'  # Replace with your actual Google Sheet ID
+
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend-backend 
@@ -63,74 +73,7 @@ except Exception as e:
 API_BASE_URL = os.environ.get('API_BASE_URL', 'http://localhost:5000')
     
 # Hard-coded investor profiles
-INVESTORS = [
-    {
-        "id": 1,
-        "name": "FAITH INFOTECH ACADEMY",
-        "industries": ["fintech", "saas", "ai"],
-        "stages": ["seed", "series-a"],
-        "risk_tolerance": "high",
-        "investment_range": [100000, 5000000],
-        "description": "Early-stage tech investor focused on disruptive technologies",
-        "contact": "https://faithinfotechacademy.com/",
-        "location": "INFOPARK, KOCHIN, KERALA"
-    },
-    {
-        "id": 2,
-        "name": "HealthFirst Partners",
-        "industries": ["healthtech", "ai"],
-        "stages": ["pre-seed", "seed"],
-        "risk_tolerance": "medium",
-        "investment_range": [50000, 2000000],
-        "description": "Specialized healthcare and medical technology investor",
-        "contact": "team@healthfirst.vc",
-        "location": "Boston, MA"
-    },
-    {
-        "id": 3,
-        "name": "Growth Equity Solutions",
-        "industries": ["saas", "ecommerce", "fintech"],
-        "stages": ["series-a", "series-b"],
-        "risk_tolerance": "low",
-        "investment_range": [1000000, 20000000],
-        "description": "Late-stage growth investor with proven market traction focus",
-        "contact": "investments@growthequity.com",
-        "location": "New York, NY"
-    },
-    {
-        "id": 4,
-        "name": "Innovation Labs Fund",
-        "industries": ["ai", "blockchain", "iot"],
-        "stages": ["pre-seed", "seed"],
-        "risk_tolerance": "high",
-        "investment_range": [25000, 1000000],
-        "description": "Deep tech investor focused on emerging technologies",
-        "contact": "hello@innovationlabs.fund",
-        "location": "Austin, TX"
-    },
-    {
-        "id": 5,
-        "name": "Education Forward VC",
-        "industries": ["edtech", "saas"],
-        "stages": ["seed", "series-a"],
-        "risk_tolerance": "medium",
-        "investment_range": [250000, 3000000],
-        "description": "Dedicated to transforming education through technology",
-        "contact": "info@educationforward.vc",
-        "location": "Seattle, WA"
-    },
-    {
-        "id": 6,
-        "name": "Commerce Accelerator",
-        "industries": ["ecommerce", "saas", "fintech"],
-        "stages": ["pre-seed", "seed", "series-a"],
-        "risk_tolerance": "high",
-        "investment_range": [100000, 8000000],
-        "description": "E-commerce and retail technology specialist",
-        "contact": "deals@commerceaccel.com",
-        "location": "Los Angeles, CA"
-    }
-]
+
 
 
 
@@ -165,6 +108,85 @@ if not GEMINI_API_KEY:
     print("CRITICAL ERROR: GEMINI_API_KEY environment variable is not set.")
     print("Please ensure GEMINI_API_KEY is defined in your .env file.")
     # In a production app, you might want to raise an exception and stop startup
+    
+def get_investors_from_sheet():
+    """
+    Authenticates with Google Sheets API and fetches investor data.
+    """
+    try:
+        # Load credentials from the JSON file
+        scope = ['https://spreadsheets.google.com/feeds',
+                 'https://www.googleapis.com/auth/drive',
+                 'https://www.googleapis.com/auth/spreadsheets']
+        
+        creds = service_account.Credentials.from_service_account_file(
+            CREDENTIALS_FILE, scopes=scope
+        )
+        
+        # Authorize gspread client
+        client = gspread.authorize(creds)
+        
+        # Open the Google Sheet by its ID
+        try:
+            sheet = client.open_by_key(SHEET_ID)
+        except:
+            print("An error occurred! Google Sheet not found. Please check the SHEET_ID.")
+        
+        # Select the specific worksheet
+        try:
+            # *** KEY CHANGE HERE: Accessing by index ***
+            worksheet = sheet.get_worksheet(0) # Get the first worksheet (index 0)
+            print(f"Successfully selected worksheet: '{worksheet.title}' (at index 0)")
+        except gspread.exceptions.WorksheetNotFound:
+            print(f"ERROR: No worksheet found at index 0. This shouldn't happen unless the sheet is truly empty.")
+            return []
+        except Exception as e:
+            print(f"ERROR: An unexpected error occurred while trying to access the worksheet at index 0. Details: {e}")
+            return []
+        
+        # Get all records as a list of dictionaries (header row becomes keys)
+        # This assumes your first row in the sheet is your header (e.g., "Investor Name", "Industry Focus")
+        try:
+            all_records = worksheet.get_all_records()
+        except:
+            print("An error occurred! Could not fetch records from the Google Sheet. Please check your worksheet.")
+            return []
+            
+        
+        # Format the data to match your existing INVESTORS list structure if necessary
+        # Example: if your hardcoded list uses 'industry' but sheet has 'Industry Focus'
+        investors_data = []
+        for row in all_records:
+            # Adjust these keys to match your Google Sheet column names EXACTLY
+            # and your desired Python dictionary keys
+            investor = {
+                'id': row.get('id'),  # Assuming you have an ID column in your sheet
+                'name': row.get('name'),
+                'location': row.get('location', ''),
+                'industries': row.get('industries', '').split(', '), # Assuming comma-separated industries
+                'investment_range': row.get('investment_range', '').split(','),
+                'risk_tolerance': row.get('risk_tolerance', '').lower(),  # Normalize to lowercase
+                'contact': row.get('contact', ''),
+                'description': row.get('description', ''),
+                'stages': row.get('stages', '')
+                # Add any other fields from your sheet
+            }
+            # Only add if 'name' is not empty (e.g., to skip empty rows)
+            if investor['name']:
+                investors_data.append(investor)
+                
+        return investors_data
+        
+    except FileNotFoundError:
+        print(f"Error: Credentials file not found at {CREDENTIALS_FILE}")
+        return []
+    except Exception as e:
+        print(f"An error occurred while fetching data from Google Sheets: {e}")
+        return []
+
+
+
+INVESTORS = get_investors_from_sheet()
 
 def calculate_match_score(founder_profile, investor):
     """
@@ -183,7 +205,7 @@ def calculate_match_score(founder_profile, investor):
         match_reasons.append("Industry alignment")
     
     # Funding stage match (+2 points)
-    if founder_profile.get('funding_stage') in investor['stages']:
+    if founder_profile.get('stages') in investor['stages']:
         score += 2
         match_reasons.append("Funding stage fit")
     
@@ -213,7 +235,7 @@ def index():
     return jsonify({
         "status": "running",
         "message": "Startup Investor Matching API",
-        "version": "2.0.0"
+        "version": "3.0.0"
     })
 
 @app.route('/api/investors')
@@ -242,7 +264,7 @@ def find_matches():
         founder_profile = request.get_json()
 
         # Validate required fields
-        required_fields = ['industry', 'funding_stage', 'risk_tolerance', 'investment_amount']
+        required_fields = ['industry', 'stages', 'risk_tolerance', 'investment_range']
         missing_fields = [field for field in required_fields if not founder_profile.get(field)]
 
         if missing_fields:

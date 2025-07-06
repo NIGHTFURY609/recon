@@ -136,7 +136,7 @@ async function apiCall(endpoint, options = {}) {
 function displayMatches(matches, founderProfile) {
     
     
-    if (!matches || matches.length === 0) {
+    if (!matches || matches.length == 0) {
         matchesContainer.innerHTML = `
             <div class="match-card animate-pop" style="border-left-color: var(--text-light);">
                 <h3>No strong matches found</h3>
@@ -279,6 +279,7 @@ function populateMatchesOverview(apiResponseData) {
         const matchCard = document.createElement('div');
         matchCard.classList.add('match-card', 'animate-pop');
         matchCard.style.animationDelay = `${index * 0.15 + 1.5}s`; // Stagger animation
+        console.log(investor);
 
         matchCard.innerHTML = `
             <div class="match-header">
@@ -524,9 +525,9 @@ profileForm.addEventListener('submit', async function(e) {
     const founderProfile = {
         industry: document.getElementById('industry').value,
         // Corrected keys to match the snake_case expected by the Flask backend
-        funding_stage: document.getElementById('funding-stage').value,
+        stages: document.getElementById('funding-stage').value,
         risk_tolerance: document.getElementById('risk-tolerance').value,
-        investment_amount: document.getElementById('investment-amount').value,
+        investment_range: document.getElementById('investment-amount').value,
         company_name: document.getElementById('company-name').value // Optional, but good to keep consistent
     };
 
