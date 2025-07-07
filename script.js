@@ -10,14 +10,12 @@ const profileForm = document.getElementById('profile-form');
 const matchesContainer = document.getElementById('matches-container');
 const matchesOverviewSection = document.getElementById('matches-overview-section');
 const messagesSection = document.getElementById('messages-section');
-
 const navDashboard = document.getElementById('nav-dashboard');
 const navProfile = document.getElementById('nav-profile');
 const navMatches = document.getElementById('nav-matches');
 const navMessages = document.getElementById('nav-messages');
 const startNewMatchButton = document.getElementById('start-new-match');
 const viewAllMatchesButton = document.getElementById('view-all-matches');
-
 const totalMatchesElement = document.getElementById('total-matches');
 const applicationsSentElement = document.getElementById('applications-sent');
 const upcomingMeetingsElement = document.getElementById('upcoming-meetings');
@@ -45,17 +43,17 @@ const characterAvatars = {
     founder: {
         name: "Founder",
         color: "#4A69BD",
-        icon: "👨‍💻" // Emoji for pixelated look
+        icon: "👨‍💻" 
     },
     investor: {
         name: "Investor Bot",
         color: "#27AE60",
-        icon: "🤖" // Emoji for pixelated look
+        icon: "🤖"
     }
 };
 
 
-// --- Utility Functions for Animations and Dynamic Text ---
+//Utility Functions for Animations and Dynamic Text
 
 /**
  * Animates a number counting up to a target value.
@@ -96,14 +94,13 @@ function typeText(element, text, delay = 50) {
     }, delay);
 }
 
-// --- API Helper Functions ---
+//API Helper Functions
 async function apiCall(endpoint, options = {}) {
     try {
-        // Simulate API call delay for better UX (optional, can be removed for production)
+        // Simulate API call delay for better UX
         await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 500)); // 0.8 to 1.3 seconds delay
 
-        // Construct the full API URL. Assuming the Flask backend is on the same host.
-         // If your Flask backend is on a different origin, specify it here, e.g., 'http://localhost:5000'
+        // Construct the full API URL. Assuming the Flask backend is on the same host.If your Flask backend is on a different origin, specify it here, e.g., 'http://localhost:5000'
         const url = `${API_BASE_URL}${endpoint}`;
 
         // Make the real fetch call
@@ -132,7 +129,7 @@ async function apiCall(endpoint, options = {}) {
     }
 }
 
-// --- UI Display Functions ---
+//UI Display Functions
 function displayMatches(matches, founderProfile) {
     
     
@@ -202,9 +199,7 @@ function displayError(errorMessage) {
     `;
 }
 
-/**
- * Populates the dashboard with mock data and animations.
- */
+
 
 function populateDashboard() {
     // Animate numbers
@@ -239,9 +234,7 @@ function populateDashboard() {
     });
 }
 
-/**
- * Populates the Matches Overview section with mock data and animations.
- */
+
 function populateMatchesOverview(apiResponseData) {
     if (!apiResponseData || !apiResponseData.success || !apiResponseData.matches) {
         console.error("Invalid API response data provided to populateMatchesOverview:", apiResponseData);
@@ -257,7 +250,6 @@ function populateMatchesOverview(apiResponseData) {
     animateNumber(totalUniqueMatchesElement, 0, totalMatches, 1000);
     animateNumber(highestMatchScoreElement, 0, highestScore, 1200);
     // For newMatchesWeekElement, you might need actual data from your backend
-    // For now, it could be a fixed value or removed if not supported by the API
     animateNumber(newMatchesWeekElement, 0, 3, 1500); // Keeping mock for now, adjust as needed
 
     // Type out welcome messages
@@ -313,9 +305,6 @@ function populateMatchesOverview(apiResponseData) {
     }
 }
 
-/**
- * Populates the Messages section with mock data and animations.
- */
 async function populateMessages() {
     typeText(messagesTitle, "Your Conversations", 40);
     setTimeout(() => {
@@ -387,9 +376,6 @@ async function populateMessages() {
 }
 
 
-/**
- * Sends a mock message and appends it to the message list.
- */
 async function sendMessage(sender, content) {
     // Trim whitespace from the message content
     if (!content.trim()) {
@@ -398,7 +384,6 @@ async function sendMessage(sender, content) {
     }
 
     try {
-        // Add a temporary message to the UI immediately for better user experience (optimistic update)
         // This makes the UI feel more responsive while waiting for the API call.
         const tempMessageItem = document.createElement('div');
         tempMessageItem.classList.add('message-item', sender, 'sending'); // 'sending' class can be used for styling (e.g., lighter color)
@@ -424,9 +409,6 @@ async function sendMessage(sender, content) {
         // Check if the message was successfully stored in the database
         if (responseData && responseData.success) {
             console.log("Message sent successfully!");
-            // Remove the temporary message. We will re-fetch all messages to ensure
-            // the server-generated timestamp is displayed correctly and the message
-            // is in its final sorted position.
             messageListElement.removeChild(tempMessageItem);
             populateMessages(); // Re-fetch all messages to update the chat UI
             if (messageInput) messageInput.value = ''; // Clear the input field after sending
@@ -446,12 +428,11 @@ async function sendMessage(sender, content) {
             tempMessageItem.classList.add('error');
             tempMessageItem.querySelector('.message-timestamp').textContent = 'Network Error';
         }
-        // Optionally, display a general error message to the user
     }
 }
 
 
-// --- Navigation & Form Handling ---
+//Navigation & Form Handling
 function showSection(sectionId) {
     const sections = document.querySelectorAll('.content-section');
     sections.forEach(section => {
@@ -528,7 +509,7 @@ profileForm.addEventListener('submit', async function(e) {
         stages: document.getElementById('funding-stage').value,
         risk_tolerance: document.getElementById('risk-tolerance').value,
         investment_range: document.getElementById('investment-amount').value,
-        company_name: document.getElementById('company-name').value // Optional, but good to keep consistent
+        company_name: document.getElementById('company-name').value
     };
 
     console.log("Attempting to submit founder profile and get matches...");

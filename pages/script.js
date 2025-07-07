@@ -5,7 +5,7 @@
 
 
 document.addEventListener('DOMContentLoaded', () => {
-    // --- DOM Element References ---
+    //DOM Element References
     const reconatorContainer = document.querySelector('.reconator-container');
     const questionCard = document.getElementById('question-card');
     const questionText = document.getElementById('question-text');
@@ -22,14 +22,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const actionButtonsContainer = document.getElementById('action-buttons');
     const sidebarQuestionList = document.getElementById('sidebar-question-list');
     
-    // --- State Variables ---
+    //State Variables
     let currentQuestionIndex = 0;
     let userAnswers = {}; // Stores answers in { questionId: selectedValue } format
     let questionHistory = []; // To manage back button navigation
     const MIN_QUESTIONS_FOR_MATCH = 7; // Minimum questions required to enable "Your Match" button
     const MAX_QUESTIONS = 10; // Total number of questions
 
-    // --- Quiz Questions Data ---
+    //Quiz Questions Data
     const questions = [
         {
             id:"question_id_1",
@@ -157,7 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
             scrollable: false
         }
     ];
-    // --- Custom Modal for Messages (replaces alert()) ---
+    //Custom Modal for Messages (replaces alert())
     function showMessageModal(message) {
         let modal = document.getElementById('custom-message-modal');
         let modalText = document.getElementById('custom-message-text');
@@ -196,7 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.addEventListener('click', outsideClick);
     }
 
-    // --- Core Quiz Functions ---
+    // Core Quiz Functions
     function updateProgress() {
         const answeredQuestionsCount = Object.keys(userAnswers).filter(key => userAnswers[key] !== undefined && userAnswers[key] !== null).length;
         const totalQuestions = questions.length;
@@ -295,7 +295,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function goToNextQuestion() {
-        // No check for answered question here to allow free navigation
         // Add current question to history before moving forward, only if it's not already the last entry
         if (questionHistory.length === 0 || questionHistory[questionHistory.length - 1] !== currentQuestionIndex) {
             questionHistory.push(currentQuestionIndex);
@@ -323,7 +322,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentQuestionIndex = questionHistory.pop(); // Go back to the previously visited question
                 displayQuestion(currentQuestionIndex);
             } else {
-                currentQuestionIndex = 0; // Should only happen if history is empty (i.e., on Q1)
+                currentQuestionIndex = 0; // Should only happen if history is empty
                 displayQuestion(currentQuestionIndex);
             }
         }, 400); // Allow exit animation to play
@@ -355,11 +354,8 @@ document.addEventListener('DOMContentLoaded', () => {
             showMessageModal(`Please answer at least ${MIN_QUESTIONS_FOR_MATCH} questions to see your match.`);
             return;
         }
-
-        // Placeholder for actual persona matching logic
-        // In a real application, you'd send userAnswers to a backend or run a more complex algorithm here.
         
-         // Assuming you have an element with this ID to display results
+         //an element with this ID to display results
         personaSummary.innerHTML = '<p>Analyzing your responses and generating your investor persona...</p>';
 
         try {
@@ -396,7 +392,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             // Trim any leading/trailing whitespace that might remain
             classificationText = classificationText.trim();
-            // --- FIX END ---
+            //FIX END
 
             let persona;
             try {

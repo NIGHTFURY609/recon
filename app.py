@@ -7,7 +7,7 @@ from datetime import datetime
 from bson.objectid import ObjectId 
 import gspread
 from google.oauth2 import service_account
-import os # Import the os module to access environment variables
+import os
 from dotenv import load_dotenv
 import requests
 
@@ -18,12 +18,11 @@ load_dotenv()
 
 
 CREDENTIALS_FILE = './recon-credentials.json'
-WORKSHEET_NAME = 'Form Responses 1'  # Replace with your actual Google Sheet worksheet name
-SHEET_ID = '1xyXqg9acHlxFbAzz4oEAdx7c41i5_mtoVBocAnQdqCU'  # Replace with your actual Google Sheet ID
+SHEET_ID = os.getenv("SHEET_ID")
 
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for frontend-backend 
+CORS(app)
 
 MONGO_CONNECTION_STRING = os.getenv("MONGO_CONNECTION_STRING")
 MONGO_DB_NAME = os.getenv("MONGO_DB_NAME")
@@ -34,18 +33,14 @@ db = None
 messages_collection = None
 
 
-# --- Redis Configuration ---
-# It's highly recommended to use environment variables for production
+# Redis Configuration 
 REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
 REDIS_PORT = int(os.environ.get('REDIS_PORT', 6379))
 REDIS_DB = int(os.environ.get('REDIS_DB', 0))
-# Get Redis password from an environment variable for security
 REDIS_PASSWORD = os.environ.get('REDIS_PASSWORD') 
- # Use SSL/TLS for secure connections
 REDIS_TTL_SECONDS = 5 * 60 # 5 minutes TTL
 
-# ---
-## Initialize Redis Client
+# Initialize Redis Client
 redis_client = None
 try:
     # Initialize Redis client with password, timeout, and SSL options
@@ -54,7 +49,7 @@ try:
         port=REDIS_PORT,
         db=REDIS_DB,
         password=REDIS_PASSWORD,
-        decode_responses=True,# Optional: For specific SSL configurations
+        decode_responses=True,
     )
     # Test connection
     redis_client.ping()
@@ -71,8 +66,6 @@ except Exception as e:
 
     
 API_BASE_URL = os.environ.get('API_BASE_URL', 'http://localhost:5000')
-    
-# Hard-coded investor profiles
 
 
 
@@ -82,12 +75,9 @@ API_BASE_URL = os.environ.get('API_BASE_URL', 'http://localhost:5000')
 if not all([MONGO_CONNECTION_STRING, MONGO_DB_NAME, MONGO_COLLECTION_NAME]):
     print("CRITICAL ERROR: One or more MongoDB environment variables are not set.")
     print("Please ensure MONGO_CONNECTION_STRING, MONGO_DB_NAME, and MONGO_COLLECTION_NAME are defined in your .env file.")
-    # In a production app, you might want to raise an exception and stop startup
 else:
     try:
         client = MongoClient(MONGO_CONNECTION_STRING)
-        # The ping command is cheap and does not require auth.
-        # It's a good way to check if the server is alive.
         client.admin.command('ping')
         db = client[MONGO_DB_NAME]
         messages_collection = db[MONGO_COLLECTION_NAME]
@@ -99,22 +89,18 @@ else:
         messages_collection = None
         
 # --- Gemini API Configuration ---
-# IMPORTANT: Get your Gemini API Key from Google AI Studio or Google Cloud Console
-# Store it securely in your .env file
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
 
 if not GEMINI_API_KEY:
     print("CRITICAL ERROR: GEMINI_API_KEY environment variable is not set.")
     print("Please ensure GEMINI_API_KEY is defined in your .env file.")
-    # In a production app, you might want to raise an exception and stop startup
     
 def get_investors_from_sheet():
     """
     Authenticates with Google Sheets API and fetches investor data.
     """
     try:
-        # Load credentials from the JSON file
         scope = ['https://spreadsheets.google.com/feeds',
                  'https://www.googleapis.com/auth/drive',
                  'https://www.googleapis.com/auth/spreadsheets']
@@ -123,18 +109,13 @@ def get_investors_from_sheet():
             CREDENTIALS_FILE, scopes=scope
         )
         
-        # Authorize gspread client
         client = gspread.authorize(creds)
-        
-        # Open the Google Sheet by its ID
         try:
             sheet = client.open_by_key(SHEET_ID)
         except:
             print("An error occurred! Google Sheet not found. Please check the SHEET_ID.")
         
-        # Select the specific worksheet
         try:
-            # *** KEY CHANGE HERE: Accessing by index ***
             worksheet = sheet.get_worksheet(0) # Get the first worksheet (index 0)
             print(f"Successfully selected worksheet: '{worksheet.title}' (at index 0)")
         except gspread.exceptions.WorksheetNotFound:
@@ -145,33 +126,26 @@ def get_investors_from_sheet():
             return []
         
         # Get all records as a list of dictionaries (header row becomes keys)
-        # This assumes your first row in the sheet is your header (e.g., "Investor Name", "Industry Focus")
         try:
             all_records = worksheet.get_all_records()
         except:
             print("An error occurred! Could not fetch records from the Google Sheet. Please check your worksheet.")
             return []
             
-        
-        # Format the data to match your existing INVESTORS list structure if necessary
-        # Example: if your hardcoded list uses 'industry' but sheet has 'Industry Focus'
         investors_data = []
         for row in all_records:
             # Adjust these keys to match your Google Sheet column names EXACTLY
-            # and your desired Python dictionary keys
             investor = {
-                'id': row.get('id'),  # Assuming you have an ID column in your sheet
+                'id': row.get('id'),
                 'name': row.get('name'),
                 'location': row.get('location', ''),
-                'industries': row.get('industries', '').split(', '), # Assuming comma-separated industries
+                'industries': row.get('industries', '').split(', '),
                 'investment_range': row.get('investment_range', '').split(','),
-                'risk_tolerance': row.get('risk_tolerance', '').lower(),  # Normalize to lowercase
+                'risk_tolerance': row.get('risk_tolerance', '').lower(),
                 'contact': row.get('contact', ''),
                 'description': row.get('description', ''),
                 'stages': row.get('stages', '')
-                # Add any other fields from your sheet
             }
-            # Only add if 'name' is not empty (e.g., to skip empty rows)
             if investor['name']:
                 investors_data.append(investor)
                 
@@ -273,12 +247,11 @@ def find_matches():
                 "error": f"Missing required fields: {', '.join(missing_fields)}"
             }), 400
 
-        # Create a cache key from the founder profile.
-        # Ensure consistent ordering of keys for consistent hashing.
+        # Create a cache key from the founder profile Ensure consistent ordering of keys for consistent hashing.
         cache_key_data = {k: founder_profile.get(k) for k in sorted(founder_profile.keys())}
         cache_key = f"match:{json.dumps(cache_key_data, sort_keys=True)}"
 
-        # --- Try to retrieve from cache ---
+        #Try to retrieve from cache
         if redis_client:
             try:
                 cached_response = redis_client.get(cache_key)
@@ -290,19 +263,17 @@ def find_matches():
         else:
             print("Redis client not available. Skipping cache lookup.")
 
-        # --- If not in cache, calculate matches ---
+        #If not in cache, calculate matches
         print(f"Cache MISS for key: {cache_key}. Calculating matches...")
         matches = []
         for investor in INVESTORS:
             match_result = calculate_match_score(founder_profile, investor)
-            if match_result["score"] > 0:  # Only include investors with some match
+            if match_result["score"] > 0:
                 matches.append(match_result)
 
-        # Sort by score (highest first) and take top 3
         matches.sort(key=lambda x: x["score"], reverse=True)
         top_matches = matches[:3]
 
-        # Prepare response
         response_data = {
             "success": True,
             "founder_profile": founder_profile,
@@ -310,7 +281,7 @@ def find_matches():
             "total_matches": len(matches),
         }
 
-        # --- Store in cache ---
+        #Store in cache
         if redis_client:
             try:
                 # Store the JSON string with a TTL
@@ -390,7 +361,7 @@ def classify_questionnaire():
             headers=headers,
             json=payload
         )
-        gemini_response.raise_for_status() # Raise an HTTPError for bad responses (4xx or 5xx)
+        gemini_response.raise_for_status()
 
         gemini_result = gemini_response.json()
 
@@ -418,9 +389,8 @@ def classify_questionnaire():
 
 @app.route('/api/matches_overview', methods=['GET'])
 def get_matches_overview():
-    cache_key = "investor_matches_overview" # A static key for now. Consider dynamic keys if data is user-specific.
+    cache_key = "investor_matches_overview"
 
-    # 1. Try to pull from Redis first
     if redis_client:
         cached_data = redis_client.get(cache_key)
         if cached_data:
@@ -487,17 +457,11 @@ def get_messages():
         return jsonify({"success": False, "error": "Database not connected."}), 500
 
     try:
-        # Fetch all messages, sorted by timestamp
-        # In MongoDB, `_id` is automatically added and can be used for natural ordering
-        # if you want to ensure order by insertion, or explicitly store a timestamp.
-        # We'll explicitly store a 'timestamp' field.
-        messages_cursor = messages_collection.find().sort("timestamp", 1) # 1 for ascending order
+        messages_cursor = messages_collection.find().sort("timestamp", 1)
 
         messages_list = []
         for msg_doc in messages_cursor:
-            # Convert ObjectId to string for JSON serialization
             msg_doc['_id'] = str(msg_doc['_id'])
-            # Convert datetime objects to string for JSON serialization
             if 'timestamp' in msg_doc and isinstance(msg_doc['timestamp'], datetime):
                 msg_doc['timestamp'] = msg_doc['timestamp'].strftime('%b %d, %Y %I:%M %p')
             messages_list.append(msg_doc)
@@ -532,7 +496,6 @@ def send_message():
         if not message_data or not message_data.get('sender') or not message_data.get('content'):
             return jsonify({"success": False, "error": "Missing sender or content in message."}), 400
 
-        # Add current server timestamp
         message_data['timestamp'] = datetime.utcnow()
 
         # Insert the message into the MongoDB collection
