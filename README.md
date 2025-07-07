@@ -13,7 +13,11 @@ A full-stack web application that matches startup founders with potential invest
 ### Backend
 - **Python Flask** - RESTful API
 - **Flask-CORS** - Cross-origin resource sharing
-- **In-memory data** - No database required for MVP
+- **Redis-Caching** - For fast data fetching
+- **NoSQL MonogoDB** - For fast and easy data storage
+- **Google Sheets** - To store scraped investor data
+- **GEMINI** - For search results
+
 
 ## 🚀 Quick Start
 
@@ -95,7 +99,6 @@ The scoring system awards points based on alignment:
 **Maximum Score: 7 points**
 
 
-
 ## 🎨 Frontend Features
 
 - **Multi-step wizard interface**
@@ -112,20 +115,15 @@ For production deployment:
 1. **Input validation** - Add server-side validation
 2. **Rate limiting** - Prevent API abuse
 3. **HTTPS** - Secure data transmission
-4. **Authentication** - User management system
 5. **Database** - Replace in-memory data with persistent storage
-
 
 
 
 ### Advanced Features
 - **Real-time matching** with WebSocket connections
 - **Machine learning** for improved matching accuracy
-- **User authentication** and profile management
 - **Messaging system** between founders and investors
 - **Analytics dashboard** for platform insights
-
-
 
 
 ## 🚢 Deployment Options
@@ -146,20 +144,10 @@ CMD ["python", "app.py"]
 ```
 
 ## 📝 Next Steps
-
-1. **Add database integration** (MongoDB)
-2. **Implement user authentication** (JWT tokens)
-3. **Add email notifications** for matches
-4. **Create admin dashboard** for investor management
-5. **Implement advanced search filters**
-6. **Add investor application workflow**
-7. **Build mobile app** with React Native/Flutter
+1. **Implement user authentication** (JWT tokens)
+2. **Add email notifications** for matches
+3. **Add investor application workflow**
 
 ## 🤝 Contributing
 
-This is a MVP implementation. For production use:
-- Add comprehensive error handling
-- Implement logging and monitoring
-- Add automated testing
-- Set up CI/CD pipeline
-- Add data validation and sanitization
+This is a MVP implementation.
